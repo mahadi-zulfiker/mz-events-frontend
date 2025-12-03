@@ -2,22 +2,22 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   FiBarChart2,
   FiBell,
   FiCalendar,
   FiGrid,
   FiHelpCircle,
+  FiHome,
   FiMenu,
   FiPlus,
   FiSearch,
   FiStar,
   FiUser,
   FiUsers,
+  FiX,
 } from 'react-icons/fi';
-import Navbar from '../Navbar';
-import Footer from '../Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
@@ -34,8 +34,9 @@ export function DashboardShell({
   actions?: React.ReactNode;
   children: React.ReactNode;
 }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const dashboardLabel = user?.role === 'ADMIN' ? 'Dashboard' : 'My Events';
 
@@ -65,6 +66,14 @@ export function DashboardShell({
 
   const NavLinks = () => (
     <div className="space-y-1">
+      <Link
+        href="/"
+        className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-white"
+        onClick={() => setOpen(false)}
+      >
+        <FiHome className={iconSize} />
+        <span>Home</span>
+      </Link>
       {navItems.map((item) => (
         <Link
           key={item.href}
@@ -86,79 +95,85 @@ export function DashboardShell({
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50">
-      <Navbar />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex gap-6">
-          <aside className="hidden lg:block w-64 shrink-0">
-            <div className="sticky top-24 space-y-4">
-              <div className="glass-panel rounded-2xl p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-300">Navigation</p>
-                  <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                </div>
-                <NavLinks />
-              </div>
-              <div className="glass-panel rounded-2xl p-4 space-y-2">
-                <p className="text-sm font-semibold text-white">Need help?</p>
-                <p className="text-xs text-slate-300">
-                  Check the help center or reach out to support for account updates.
-                </p>
-                <Link
-                  href="/faq"
-                  className="inline-flex items-center justify-center rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-white/10"
-                >
-                  Open help center
-                </Link>
-              </div>
+      <div className="grid lg:grid-cols-[260px_1fr] min-h-screen">
+        <aside className="hidden lg:block border-r border-white/10 bg-slate-950/80 backdrop-blur">
+          <div className="sticky top-0 h-screen p-5 space-y-6">
+            <div className="flex items-center justify-between">
+              <Link href="/" className="text-lg font-bold text-white">
+                EventHub
+              </Link>
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             </div>
-          </aside>
-
-          <main className="flex-1 space-y-6">
-            <div className="flex items-center gap-3 lg:hidden">
-              <button
-                onClick={() => setOpen(true)}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm font-semibold text-slate-100"
+            <div className="glass-panel rounded-2xl p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-300">Navigation</p>
+              </div>
+              <NavLinks />
+            </div>
+            <div className="glass-panel rounded-2xl p-4 space-y-2">
+              <p className="text-sm font-semibold text-white">Need help?</p>
+              <p className="text-xs text-slate-300">Open the help center for quick answers.</p>
+              <Link
+                href="/faq"
+                className="inline-flex items-center justify-center rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-slate-100 transition hover:bg-white/10"
               >
-                <FiMenu /> Menu
+                Help center
+              </Link>
+            </div>
+          </div>
+        </aside>
+
+        <main className="flex-1">
+          <div className="flex items-center justify-between border-b border-white/10 bg-slate-900/60 px-4 sm:px-6 py-4">
+            <div className="flex items-center gap-3">
+              <button
+                className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 text-white"
+                onClick={() => setOpen(true)}
+                aria-label="Open menu"
+              >
+                <FiMenu />
               </button>
-              <div className="flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2 border border-white/10 text-slate-200 text-sm">
-                <FiBell /> Notifications
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-300">Workspace</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-white">{title}</h1>
+                {subtitle && <p className="text-sm text-slate-300">{subtitle}</p>}
               </div>
             </div>
-
-            <div className="glass-panel rounded-2xl border-white/10 p-5 md:p-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div className="space-y-1">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-300">Workspace</p>
-                  <h1 className="text-2xl md:text-3xl font-bold text-white">{title}</h1>
-                  {subtitle && <p className="text-sm text-slate-300">{subtitle}</p>}
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="relative">
-                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      placeholder="Search..."
-                      className="w-52 rounded-xl border border-white/10 bg-white/5 px-10 py-2 text-sm text-white placeholder:text-slate-400 focus:border-white/40 focus:outline-none"
-                    />
-                  </div>
-                  <button className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm font-semibold text-slate-100">
-                    <FiBell /> Alerts
-                  </button>
-                  {actions}
-                </div>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="relative hidden md:block">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  placeholder="Search..."
+                  className="w-48 rounded-xl border border-white/10 bg-white/5 px-10 py-2 text-sm text-white placeholder:text-slate-400 focus:border-white/40 focus:outline-none"
+                />
               </div>
+              <button className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm font-semibold text-slate-100">
+                <FiBell /> Alerts
+              </button>
+              <button
+                onClick={() => router.push('/')}
+                className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-white/10"
+              >
+                <FiHome /> Home
+              </button>
+              {actions}
+              <button
+                onClick={logout}
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm font-semibold text-red-100 hover:bg-white/10"
+              >
+                Logout
+              </button>
             </div>
+          </div>
 
-            {children}
-          </main>
-        </div>
+          <div className="p-4 sm:p-6 space-y-6">{children}</div>
+        </main>
       </div>
 
       {open && (
         <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden" onClick={() => setOpen(false)}>
           <div
-            className="absolute left-0 top-0 h-full w-80 bg-slate-900/95 border-r border-white/10 p-5 space-y-6"
+            className="absolute left-0 top-0 h-full w-80 bg-slate-900/95 border-r border-white/10 p-5 space-y-6 animate-slide-right"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -167,15 +182,13 @@ export function DashboardShell({
                 onClick={() => setOpen(false)}
                 className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-200"
               >
-                Close
+                <FiX />
               </button>
             </div>
             <NavLinks />
           </div>
         </div>
       )}
-
-      <Footer />
     </div>
   );
 }

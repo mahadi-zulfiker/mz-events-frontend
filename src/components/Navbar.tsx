@@ -2,19 +2,14 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   FiCalendar,
   FiGrid,
-  FiHome,
-  FiHelpCircle,
-  FiLogOut,
   FiMenu,
-  FiPlus,
-  FiShield,
-  FiUser,
-  FiUsers,
+  FiLogOut,
+  FiChevronDown,
   FiX,
 } from 'react-icons/fi';
 import { HiSparkles } from 'react-icons/hi';
@@ -23,44 +18,24 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
 
   const navLinks = useMemo(() => {
-    if (!user) {
-      return [
-        { href: '/', label: 'Home', icon: FiHome },
-        { href: '/events', label: 'Explore Events', icon: FiCalendar },
-        { href: '/register?role=HOST', label: 'Become a Host', icon: HiSparkles },
-      ];
-    }
-
-    if (user.role === 'ADMIN') {
-      return [
-        { href: '/', label: 'Home', icon: FiHome },
-        { href: '/admin', label: 'Admin Dashboard', icon: FiShield },
-        { href: '/admin/users', label: 'Manage Users', icon: FiUsers },
-        { href: '/admin/users?role=HOST', label: 'Manage Hosts', icon: FiUsers },
-        { href: '/admin/events', label: 'Manage Events', icon: FiCalendar },
-        { href: '/admin/faq', label: 'Manage FAQs', icon: FiHelpCircle },
-        { href: `/profile/${user.id}`, label: 'Profile', icon: FiUser },
-      ];
-    }
-
-    if (user.role === 'HOST') {
-      return [
-        { href: '/', label: 'Home', icon: FiHome },
-        { href: '/events', label: 'Explore Events', icon: FiCalendar },
-        { href: '/dashboard#hosted', label: 'My Events', icon: FiGrid },
-        { href: '/events/create', label: 'Create Event', icon: FiPlus },
-        { href: `/profile/${user.id}`, label: 'Profile', icon: FiUser },
-      ];
-    }
-
-    return [
-      { href: '/', label: 'Home', icon: FiHome },
+    const publicLinks = [
       { href: '/events', label: 'Explore Events', icon: FiCalendar },
-      { href: '/dashboard#joined', label: 'My Events', icon: FiGrid },
-      { href: `/profile/${user.id}`, label: 'Profile', icon: FiUser },
+      { href: '/register?role=HOST', label: 'Become a Host', icon: HiSparkles },
     ];
+
+    if (!user) return publicLinks;
+
+    const dashboardLink = {
+      href: user.role === 'ADMIN' ? '/admin' : '/dashboard',
+      label: user.role === 'ADMIN' ? 'Admin Dashboard' : 'Dashboard',
+      icon: FiGrid,
+    };
+
+    return [...publicLinks, dashboardLink];
   }, [user]);
 
   const isActive = (href: string) => {
@@ -68,16 +43,62 @@ export default function Navbar() {
     return pathname === target || (target !== '/' && pathname.startsWith(target));
   };
 
-  const UserBadge = () =>
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const dashboardHref = user?.role === 'ADMIN' ? '/admin' : '/dashboard';
+  const userInitial = user ? (user.fullName || user.email || 'U').trim().charAt(0).toUpperCase() : '';
+  const handleLogout = () => {
+    setUserMenuOpen(false);
+    setOpen(false);
+    logout();
+  };
+
+  const UserMenu = () =>
     user ? (
-      <div className="flex items-center gap-3 rounded-full bg-white/5 px-3 py-2 border border-white/10">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400 text-sm font-semibold text-white">
-          {user.fullName?.[0] || 'U'}
-        </div>
-        <div className="leading-tight">
-          <p className="text-sm font-semibold text-white">{user.fullName}</p>
-          <p className="text-xs text-slate-300">{user.role}</p>
-        </div>
+      <div className="relative" ref={userMenuRef}>
+        <button
+          onClick={() => setUserMenuOpen((p) => !p)}
+          className="flex items-center gap-3 rounded-full bg-white/5 px-3 py-2 border border-white/10 hover:border-white/30 transition text-white text-sm font-semibold"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400 text-sm font-bold uppercase text-white shadow-lg shadow-indigo-500/30">
+            {userInitial}
+          </span>
+          <div className="hidden sm:flex flex-col text-left leading-tight">
+            <span className="text-xs text-slate-300">Signed in</span>
+            <span className="text-sm font-semibold text-white max-w-[140px] truncate">
+              {user.fullName || user.email}
+            </span>
+          </div>
+          <FiChevronDown className="text-slate-200" />
+        </button>
+        {userMenuOpen && (
+          <div className="absolute right-0 mt-2 w-52 rounded-xl border border-white/10 bg-slate-900/95 shadow-lg shadow-indigo-900/30 overflow-hidden">
+            <Link
+              href={dashboardHref}
+              onClick={() => {
+                setUserMenuOpen(false);
+                setOpen(false);
+              }}
+              className="block px-4 py-3 text-sm text-slate-100 hover:bg-white/10"
+            >
+              Dashboard
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-200 hover:bg-white/10 hover:text-white"
+            >
+              <FiLogOut /> Logout
+            </button>
+          </div>
+        )}
       </div>
     ) : null;
 
@@ -94,7 +115,7 @@ export default function Navbar() {
           </div>
         </Link>
 
-        <div className="hidden md:flex items-center gap-2 lg:gap-3 overflow-x-auto whitespace-nowrap py-1">
+        <div className="hidden md:flex flex-wrap items-center gap-2 lg:gap-3 whitespace-nowrap py-1 no-scrollbar overflow-visible">
           {navLinks.map((item) => (
             <Link
               key={item.href}
@@ -125,15 +146,7 @@ export default function Navbar() {
               </Link>
             </>
           ) : (
-            <>
-              <UserBadge />
-              <button
-                onClick={logout}
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white"
-              >
-                <FiLogOut /> Logout
-              </button>
-            </>
+            <UserMenu />
           )}
         </div>
 
@@ -148,7 +161,7 @@ export default function Navbar() {
 
       {open && (
         <div className="md:hidden border-t border-white/10 bg-slate-900/95 backdrop-blur">
-          <div className="max-w-7xl mx-auto px-4 py-4 space-y-2">
+          <div className="max-w-7xl mx-auto px-4 py-4 space-y-3 animate-slide-down">
             {navLinks.map((item) => (
               <Link
                 key={item.href}
@@ -183,17 +196,8 @@ export default function Navbar() {
                 </Link>
               </div>
             ) : (
-              <div className="flex items-center justify-between pt-3">
-                <UserBadge />
-                <button
-                  onClick={() => {
-                    setOpen(false);
-                    logout();
-                  }}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10 hover:text-white"
-                >
-                  <FiLogOut /> Logout
-                </button>
+              <div className="space-y-2">
+                <UserMenu />
               </div>
             )}
           </div>
