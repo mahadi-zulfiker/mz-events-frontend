@@ -60,7 +60,7 @@ export default function AdminReviewsPage() {
 
   return (
     <DashboardShell
-      title="Admin · Reviews"
+      title="Admin - Reviews"
       subtitle="Moderate community feedback without friction."
       actions={
         <Button variant="outline" onClick={loadReviews}>

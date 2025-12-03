@@ -119,6 +119,45 @@ const fallbackEvents: Partial<Event>[] = [
   },
 ];
 
+type TopHost = {
+  id?: string;
+  name: string;
+  rating: number;
+  location?: string | null;
+  avatar?: string | null;
+  tagline?: string;
+};
+
+const fallbackHosts: TopHost[] = [
+  {
+    id: 'host-fallback-1',
+    name: 'Host One',
+    rating: 4.9,
+    location: 'Barcelona',
+    tagline: 'Curating intimate rooftop sessions.',
+    avatar:
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80',
+  },
+  {
+    id: 'host-fallback-2',
+    name: 'Host Two',
+    rating: 4.8,
+    location: 'Denver',
+    tagline: 'Weekend adventures and fresh air.',
+    avatar:
+      'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?auto=format&fit=crop&w=300&q=80',
+  },
+  {
+    id: 'host-fallback-3',
+    name: 'Host Three',
+    rating: 4.7,
+    location: 'Bangkok',
+    tagline: 'Food crawls that feel like home.',
+    avatar:
+      'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=300&q=80',
+  },
+];
+
 export default function Home() {
   const { user } = useAuth();
   const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
@@ -145,6 +184,28 @@ export default function Home() {
     () => (featuredEvents.length ? featuredEvents : fallbackEvents),
     [featuredEvents]
   );
+
+  const topHosts = useMemo<TopHost[]>(() => {
+    const map = new Map<string, TopHost>();
+
+    featuredEvents.forEach((ev) => {
+      if (!ev.host) return;
+      if (map.has(ev.host.id)) return;
+      map.set(ev.host.id, {
+        id: ev.host.id,
+        name: ev.host.fullName,
+        rating: ev.host.averageRating || 4.5,
+        location: ev.host.location,
+        avatar: ev.host.profileImage,
+      });
+    });
+
+    const values = Array.from(map.values()).sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    if (values.length === 0) {
+      return fallbackHosts;
+    }
+    return values.slice(0, 3);
+  }, [featuredEvents]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50">
@@ -177,7 +238,7 @@ export default function Home() {
                 Explore events <ArrowRight size={18} />
               </Link>
               <Link
-                href={user ? '/dashboard' : '/register'}
+                href={user ? '/events/create' : '/register?role=HOST'}
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-lg font-semibold text-white transition hover:border-white hover:bg-white/10"
               >
                 Become a host <BadgeCheck size={18} />
@@ -251,6 +312,64 @@ export default function Home() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      <section className="py-16 bg-slate-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <p className="text-indigo-300 text-sm font-semibold uppercase tracking-wide">
+                Trusted hosts
+              </p>
+              <h2 className="text-3xl font-bold text-white">Top-rated organizers</h2>
+              <p className="text-slate-300">
+                Curated from live events and reviews. Explore their public profiles before you join.
+              </p>
+            </div>
+            <Link
+              href="/events"
+              className="inline-flex items-center gap-2 text-indigo-300 hover:text-indigo-200 text-sm font-semibold"
+            >
+              Browse events <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {topHosts.map((host) => (
+              <Link
+                key={host.id || host.name}
+                href={host.id ? `/profile/${host.id}` : '/register?role=HOST'}
+                className="group rounded-2xl border border-white/10 bg-white/5 p-5 flex flex-col gap-3 transition hover:-translate-y-1 hover:border-indigo-400/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="h-12 w-12 rounded-full bg-cover bg-center border border-white/20"
+                    style={{
+                      backgroundImage: `url(${
+                        host.avatar ||
+                        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80'
+                      })`,
+                    }}
+                  />
+                  <div>
+                    <p className="text-lg font-semibold text-white">{host.name}</p>
+                    <p className="text-xs text-slate-300">{host.location || 'Worldwide'}</p>
+                  </div>
+                </div>
+                <p className="text-sm text-slate-200">{host.tagline || 'Community-first host'}</p>
+                <div className="flex items-center justify-between text-sm text-indigo-200">
+                  <span className="inline-flex items-center gap-1">
+                    <Star size={16} className="fill-yellow-400 text-yellow-400" />
+                    {host.rating.toFixed(1)}
+                  </span>
+                  <span className="inline-flex items-center gap-1 group-hover:translate-x-1 transition">
+                    View profile <ArrowRight size={14} />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -334,7 +453,7 @@ export default function Home() {
               Explore events <ArrowRight size={18} />
             </Link>
             <Link
-              href={user ? '/events/create' : '/register'}
+              href={user ? '/events/create' : '/register?role=HOST'}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-white/40 px-6 py-3 text-lg font-semibold text-white hover:bg-white/10 transition"
             >
               Launch an event <CalendarDays size={18} />

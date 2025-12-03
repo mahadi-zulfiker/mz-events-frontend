@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { StatCard } from '@/components/layout/StatCard';
 import Link from 'next/link';
-import { FiArrowRight, FiCalendar, FiStar, FiUsers } from 'react-icons/fi';
+import { FiArrowRight, FiCalendar, FiHelpCircle, FiStar, FiUsers } from 'react-icons/fi';
 
 export default function AdminHomePage() {
   const { user, loading: authLoading } = useAuth();
@@ -45,10 +45,11 @@ export default function AdminHomePage() {
         <StatCard label="Revenue" value={`$${stats?.revenue ?? 0}`} tone="amber" />
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <QuickLink href="/admin/users" icon={FiUsers} title="User management" copy="Promote, demote, or remove accounts." />
         <QuickLink href="/admin/events" icon={FiCalendar} title="Events oversight" copy="Audit, pause, or remove listings." />
         <QuickLink href="/admin/reviews" icon={FiStar} title="Review moderation" copy="Keep the feedback loop healthy." />
+        <QuickLink href="/admin/faq" icon={FiHelpCircle} title="FAQ library" copy="Publish and edit help center content." />
       </div>
     </DashboardShell>
   );

@@ -8,11 +8,13 @@ import {
   FiCalendar,
   FiGrid,
   FiHome,
+  FiHelpCircle,
   FiLogOut,
   FiMenu,
   FiPlus,
   FiShield,
   FiUser,
+  FiUsers,
   FiX,
 } from 'react-icons/fi';
 import { HiSparkles } from 'react-icons/hi';
@@ -23,39 +25,48 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   const navLinks = useMemo(() => {
-    const base = [
+    if (!user) {
+      return [
+        { href: '/', label: 'Home', icon: FiHome },
+        { href: '/events', label: 'Explore Events', icon: FiCalendar },
+        { href: '/register?role=HOST', label: 'Become a Host', icon: HiSparkles },
+      ];
+    }
+
+    if (user.role === 'ADMIN') {
+      return [
+        { href: '/', label: 'Home', icon: FiHome },
+        { href: '/admin', label: 'Admin Dashboard', icon: FiShield },
+        { href: '/admin/users', label: 'Manage Users', icon: FiUsers },
+        { href: '/admin/users?role=HOST', label: 'Manage Hosts', icon: FiUsers },
+        { href: '/admin/events', label: 'Manage Events', icon: FiCalendar },
+        { href: '/admin/faq', label: 'Manage FAQs', icon: FiHelpCircle },
+        { href: `/profile/${user.id}`, label: 'Profile', icon: FiUser },
+      ];
+    }
+
+    if (user.role === 'HOST') {
+      return [
+        { href: '/', label: 'Home', icon: FiHome },
+        { href: '/events', label: 'Explore Events', icon: FiCalendar },
+        { href: '/dashboard#hosted', label: 'My Events', icon: FiGrid },
+        { href: '/events/create', label: 'Create Event', icon: FiPlus },
+        { href: `/profile/${user.id}`, label: 'Profile', icon: FiUser },
+      ];
+    }
+
+    return [
       { href: '/', label: 'Home', icon: FiHome },
-      { href: '/events', label: 'Browse Events', icon: FiCalendar },
+      { href: '/events', label: 'Explore Events', icon: FiCalendar },
+      { href: '/dashboard#joined', label: 'My Events', icon: FiGrid },
+      { href: `/profile/${user.id}`, label: 'Profile', icon: FiUser },
     ];
-
-    if (!user) return base;
-
-    const roleItems =
-      user.role === 'ADMIN'
-        ? [
-            { href: '/dashboard', label: 'Dashboard', icon: FiGrid },
-            { href: '/admin', label: 'Admin', icon: FiShield },
-          ]
-        : [
-            { href: '/dashboard', label: 'Dashboard', icon: FiGrid },
-            ...(user.role !== 'USER'
-              ? [{ href: '/events/create', label: 'Create Event', icon: FiPlus }]
-              : []),
-          ];
-
-    const profileItem = { href: `/profile/${user.id}`, label: 'Profile', icon: FiUser };
-
-    const combined = [...base, ...roleItems, profileItem];
-    const seen = new Set<string>();
-    return combined.filter((item) => {
-      if (seen.has(item.href)) return false;
-      seen.add(item.href);
-      return true;
-    });
   }, [user]);
 
-  const isActive = (href: string) =>
-    pathname === href || (href !== '/' && pathname.startsWith(href));
+  const isActive = (href: string) => {
+    const target = href.split('#')[0].split('?')[0];
+    return pathname === target || (target !== '/' && pathname.startsWith(target));
+  };
 
   const UserBadge = () =>
     user ? (
@@ -72,7 +83,7 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 backdrop-blur-lg bg-slate-950/70 border-b border-white/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
         <Link href="/" className="flex items-center space-x-2">
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/30">
             <HiSparkles className="text-white text-xl" />
@@ -83,7 +94,7 @@ export default function Navbar() {
           </div>
         </Link>
 
-        <div className="hidden md:flex items-center gap-2 lg:gap-4">
+        <div className="hidden md:flex items-center gap-2 lg:gap-3 overflow-x-auto whitespace-nowrap py-1">
           {navLinks.map((item) => (
             <Link
               key={item.href}

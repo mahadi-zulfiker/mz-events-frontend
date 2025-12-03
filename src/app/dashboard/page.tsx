@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { formatCurrency } from '@/lib/utils';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -59,8 +60,10 @@ export default function DashboardPage() {
   const revenue = useMemo(() => {
     if (!hosted) return 0;
     return hosted.reduce((sum, e) => {
-      const count = e._count?.participants ?? 0;
-      return sum + Number(e.joiningFee || 0) * count;
+      const paidParticipants = Array.isArray(e.participants)
+        ? e.participants.filter((p) => p.paymentStatus === 'COMPLETED').length
+        : e._count?.participants ?? 0;
+      return sum + Number(e.joiningFee || 0) * paidParticipants;
     }, 0);
   }, [hosted]);
 
@@ -147,7 +150,9 @@ const UserDashboard = ({
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
               {hosted.map((e) => (
-                <EventCard key={e.id} event={e} />
+                <Link key={e.id} href={`/events/${e.id}#participants`} className="block">
+                  <EventCard event={e} />
+                </Link>
               ))}
             </div>
           )}
@@ -157,7 +162,7 @@ const UserDashboard = ({
       <Section
         id="joined"
         title="Joined events"
-        description="Everything you have RSVP’d to in one clean view."
+        description="Everything you have RSVP'd to in one clean view."
         emptyText="You have not joined any events yet."
       >
         {joined.length === 0 ? (
@@ -165,7 +170,9 @@ const UserDashboard = ({
         ) : (
           <div className="grid md:grid-cols-2 gap-4">
             {joined.map((e) => (
-              <EventCard key={e.id} event={e} />
+              <Link key={e.id} href={`/events/${e.id}`} className="block">
+                <EventCard event={e} />
+              </Link>
             ))}
           </div>
         )}

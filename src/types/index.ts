@@ -69,3 +69,12 @@ export interface Review {
   user: ApiUser;
   event?: { id: string; title: string };
 }
+
+export interface Faq {
+  id: string;
+  question: string;
+  answer: string;
+  category?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

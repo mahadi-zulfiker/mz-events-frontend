@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { FiFacebook, FiTwitter, FiInstagram, FiMail } from 'react-icons/fi';
 
@@ -73,6 +75,7 @@ export default function Footer() {
               className="flex flex-col gap-3"
               onSubmit={(e) => {
                 e.preventDefault();
+                alert('Thanks for subscribing! We will keep you updated.');
               }}
             >
               <input
@@ -92,7 +95,7 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col md:flex-row items-center justify-between border-t border-white/10 pt-6 text-sm text-slate-400">
-          <p>© {new Date().getFullYear()} EventHub. Crafted for modern event builders.</p>
+          <p>(c) {new Date().getFullYear()} EventHub. Crafted for modern event builders.</p>
           <div className="flex items-center gap-3 mt-3 md:mt-0">
             <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             <p>Live infrastructure status: All systems normal</p>

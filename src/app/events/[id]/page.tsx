@@ -345,7 +345,13 @@ export default function EventDetailsPage() {
                         loading={actionLoading}
                         disabled={event.status !== 'OPEN'}
                       >
-                        {event.status === 'FULL' ? 'Event Full' : 'Join Event'}
+                        {event.status === 'FULL'
+                          ? 'Event Full'
+                          : event.status === 'CANCELLED'
+                            ? 'Event Closed'
+                            : event.status === 'COMPLETED'
+                              ? 'Event Completed'
+                              : 'Join Event'}
                       </Button>
                     )}
                   </div>

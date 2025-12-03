@@ -8,6 +8,7 @@ import {
   FiBell,
   FiCalendar,
   FiGrid,
+  FiHelpCircle,
   FiMenu,
   FiPlus,
   FiSearch,
@@ -36,25 +37,31 @@ export function DashboardShell({
   const { user } = useAuth();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const dashboardLabel = user?.role === 'ADMIN' ? 'Dashboard' : 'My Events';
 
   const navItems = useMemo(() => {
     if (!user) return [];
 
     const base = [
-      { href: '/dashboard', label: 'Dashboard', icon: FiGrid, roles: ['USER', 'HOST', 'ADMIN'] },
+      { href: '/dashboard', label: dashboardLabel, icon: FiGrid, roles: ['USER', 'HOST', 'ADMIN'] },
       { href: '/events', label: 'Browse Events', icon: FiCalendar, roles: ['USER', 'HOST', 'ADMIN'] },
       { href: '/events/create', label: 'Create Event', icon: FiPlus, roles: ['HOST', 'ADMIN'] },
       { href: '/admin', label: 'Admin', icon: FiBarChart2, roles: ['ADMIN'] },
       { href: '/admin/users', label: 'Users', icon: FiUsers, roles: ['ADMIN'] },
+      { href: '/admin/users?role=HOST', label: 'Hosts', icon: FiUsers, roles: ['ADMIN'] },
       { href: '/admin/events', label: 'Events', icon: FiCalendar, roles: ['ADMIN'] },
       { href: '/admin/reviews', label: 'Reviews', icon: FiStar, roles: ['ADMIN'] },
+      { href: '/admin/faq', label: 'FAQs', icon: FiHelpCircle, roles: ['ADMIN'] },
       { href: `/profile/${user.id}`, label: 'Profile', icon: FiUser, roles: ['USER', 'HOST', 'ADMIN'] },
     ];
 
     return base.filter((item) => item.roles.includes(user.role));
-  }, [user]);
+  }, [user, dashboardLabel]);
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const isActive = (href: string) => {
+    const target = href.split('?')[0];
+    return pathname === target || pathname.startsWith(`${target}/`);
+  };
 
   const NavLinks = () => (
     <div className="space-y-1">

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import axios from '@/lib/axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -13,13 +13,23 @@ import { DashboardShell } from '@/components/layout/DashboardShell';
 export default function AdminUsersPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [roleFilter, setRoleFilter] = useState<string>('');
   const [meta, setMeta] = useState<{ page: number; limit: number; total: number }>({
     page: 1,
     limit: 10,
     total: 0,
   });
+
+  useEffect(() => {
+    const initialRole = searchParams.get('role');
+    if (initialRole && ['USER', 'HOST', 'ADMIN'].includes(initialRole)) {
+      setRoleFilter(initialRole);
+      setMeta((prev) => ({ ...prev, page: 1 }));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -28,13 +38,13 @@ export default function AdminUsersPage() {
     } else {
       loadUsers();
     }
-  }, [user, authLoading, meta.page]);
+  }, [user, authLoading, meta.page, roleFilter]);
 
   const loadUsers = async () => {
     try {
       setLoading(true);
       const { data } = await axios.get('/admin/users', {
-        params: { page: meta.page, limit: meta.limit },
+        params: { page: meta.page, limit: meta.limit, role: roleFilter || undefined },
       });
       setUsers(data.data);
       if (data.meta) setMeta(data.meta);
@@ -59,12 +69,27 @@ export default function AdminUsersPage() {
 
   return (
     <DashboardShell
-      title="Admin · Users"
+      title="Admin - Users"
       subtitle="Control access and roles across the platform."
       actions={
-        <Button variant="outline" onClick={loadUsers}>
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select
+            value={roleFilter}
+            onChange={(e) => {
+              setRoleFilter(e.target.value);
+              setMeta((prev) => ({ ...prev, page: 1 }));
+            }}
+            className="w-36 rounded-lg border border-slate-300 bg-white text-slate-900"
+          >
+            <option value="">All roles</option>
+            <option value="USER">Users</option>
+            <option value="HOST">Hosts</option>
+            <option value="ADMIN">Admins</option>
+          </Select>
+          <Button variant="outline" onClick={loadUsers}>
+            Refresh
+          </Button>
+        </div>
       }
     >
       <div className="glass-panel rounded-2xl border border-white/10">
@@ -86,7 +111,7 @@ export default function AdminUsersPage() {
                 <Select
                   value={u.role}
                   onChange={(e) => updateUser(u.id, e.target.value)}
-                  className="w-36 rounded-lg border border-white/10 bg-white/5 text-white"
+                  className="w-36 rounded-lg border border-slate-300 bg-white text-slate-900"
                 >
                   <option value="USER">USER</option>
                   <option value="HOST">HOST</option>

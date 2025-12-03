@@ -60,7 +60,7 @@ export default function AdminEventsPage() {
 
   return (
     <DashboardShell
-      title="Admin · Events"
+      title="Admin - Events"
       subtitle="Full visibility into the experience pipeline."
       actions={
         <Button variant="outline" onClick={loadEvents}>
