@@ -74,9 +74,14 @@ export default function AdminEventsPage() {
       title="Admin - Events"
       subtitle="Full visibility into the experience pipeline."
       actions={
-        <Button variant="outline" onClick={loadEvents}>
-          Refresh
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/events/create">
+            <Button>Create event</Button>
+          </Link>
+          <Button variant="outline" onClick={loadEvents}>
+            Refresh
+          </Button>
+        </div>
       }
     >
       <div className="glass-panel rounded-2xl border border-white/10">

@@ -119,7 +119,20 @@ export function DashboardShell({
       ],
     };
 
-    if (user.role === 'ADMIN') return [adminSection, attendeeSection];
+    if (user.role === 'ADMIN') {
+      const adminHostSection: NavSection = {
+        ...hostSection,
+        items: [
+          { href: '/dashboard', label: 'Host Dashboard', icon: FiBarChart2 },
+          { href: '/events/create', label: 'Create Event', icon: FiCalendar },
+          { href: '/admin/events', label: 'Manage Events', icon: FiGrid },
+          { href: '/payments/revenue', label: 'Revenue & Payouts', icon: FiBarChart2 },
+          { href: '/calendar', label: 'Calendar', icon: FiCalendar },
+          { href: '/map', label: 'Map View', icon: FiMapPin },
+        ],
+      };
+      return [adminSection, adminHostSection, attendeeSection];
+    }
     if (user.role === 'HOST') return [hostSection, attendeeSection];
     return [attendeeSection];
   }, [profileHref, user]);

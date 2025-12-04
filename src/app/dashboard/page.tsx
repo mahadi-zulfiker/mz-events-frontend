@@ -86,9 +86,15 @@ export default function DashboardPage() {
         user.role === 'HOST' ? (
           <Button onClick={() => router.push('/events/create')}>Create event</Button>
         ) : user.role === 'ADMIN' ? (
-          <Button variant="outline" onClick={() => router.push('/admin/users')}>
-            Manage users
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => router.push('/events/create')}>Create event</Button>
+            <Button variant="outline" onClick={() => router.push('/admin/events')}>
+              Manage events
+            </Button>
+            <Button variant="ghost" onClick={() => router.push('/admin/users')}>
+              Manage users
+            </Button>
+          </div>
         ) : (
           <Button variant="outline" onClick={() => router.push('/events')}>
             Browse events
@@ -273,7 +279,7 @@ const AdminDashboard = ({
     >
       <div className="grid md:grid-cols-2 gap-4">
         {events.slice(0, 6).map((e) => (
-          <EventCard key={e.id} event={e} />
+          <EventCard key={e.id} event={e} manage />
         ))}
       </div>
     </Section>
