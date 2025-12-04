@@ -4,6 +4,8 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { LeafletMouseEvent } from 'leaflet';
+import { useMapEvents } from 'react-leaflet';
 import { eventSchema } from '@/lib/validators';
 import { uploadImageToCloudinary } from '@/lib/cloudinary';
 import { Button } from '../ui/button';
@@ -18,6 +20,12 @@ import dynamic from 'next/dynamic';
 const MapContainer = dynamic(async () => (await import('react-leaflet')).MapContainer, { ssr: false });
 const TileLayer = dynamic(async () => (await import('react-leaflet')).TileLayer, { ssr: false });
 const Marker = dynamic(async () => (await import('react-leaflet')).Marker, { ssr: false });
+const MapClickHandler = ({ onClick }: { onClick: (e: LeafletMouseEvent) => void }) => {
+  useMapEvents({
+    click: onClick,
+  });
+  return null;
+};
 
 type EventFormValues = z.infer<typeof eventSchema>;
 
@@ -109,7 +117,7 @@ export const EventForm = ({
     }
   };
 
-  const handleMapClick = (e: any) => {
+  const handleMapClick = (e: LeafletMouseEvent) => {
     const { lat, lng } = e.latlng;
     setValue('latitude', Number(lat.toFixed(6)));
     setValue('longitude', Number(lng.toFixed(6)));
@@ -234,8 +242,8 @@ export const EventForm = ({
                   zoom={markerPosition ? 10 : 3}
                   scrollWheelZoom
                   style={{ height: '100%', width: '100%' }}
-                  onClick={handleMapClick as any}
                 >
+                  <MapClickHandler onClick={handleMapClick} />
                   <TileLayer
                     attribution="&copy; OpenStreetMap contributors"
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

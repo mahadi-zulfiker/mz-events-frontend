@@ -405,7 +405,7 @@ export default function EventDetailsPage() {
                         <Button
                           variant="ghost"
                           onClick={() => requestStatusChange('OPEN')}
-                          disabled={event.status === 'OPEN' || actionLoading}
+                          disabled={actionLoading}
                         >
                           Reopen event
                         </Button>

@@ -2,6 +2,7 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 type Variant = 'default' | 'outline' | 'ghost' | 'destructive' | 'secondary';
+type Size = 'sm' | 'md' | 'lg' | 'icon';
 
 const variantClasses: Record<Variant, string> = {
   default:
@@ -14,19 +15,31 @@ const variantClasses: Record<Variant, string> = {
     'bg-white text-slate-900 hover:bg-slate-100 focus:ring-indigo-200',
 };
 
+const sizeClasses: Record<Size, string> = {
+  sm: 'px-3 py-1.5 text-sm',
+  md: 'px-4 py-2 text-sm',
+  lg: 'px-5 py-3 text-base',
+  icon: 'h-10 w-10 p-0',
+};
+
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
   loading?: boolean;
+  size?: Size;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, children, variant = 'default', loading, disabled, ...props }, ref) => {
+  (
+    { className, children, variant = 'default', size = 'md', loading, disabled, ...props },
+    ref
+  ) => {
     return (
       <button
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed',
+          'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed',
+          sizeClasses[size],
           variantClasses[variant],
           className
         )}
