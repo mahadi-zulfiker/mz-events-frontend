@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import axios from '@/lib/axios';
 import toast from 'react-hot-toast';
+import { motion } from "framer-motion";
 import { useAuth } from '@/contexts/AuthContext';
 import { Event } from '@/types';
 import {
@@ -346,10 +347,9 @@ export default function Home() {
                   <div
                     className="h-12 w-12 rounded-full bg-cover bg-center border border-white/20"
                     style={{
-                      backgroundImage: `url(${
-                        host.avatar ||
+                      backgroundImage: `url(${host.avatar ||
                         'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80'
-                      })`,
+                        })`,
                     }}
                   />
                   <div>
@@ -436,31 +436,90 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 bg-gradient-to-r from-indigo-600 to-pink-600">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-white">
+      <section className="relative py-16 sm:py-20 overflow-hidden">
+        {/* Background Image + Gradient Overlay */}
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1920&q=80"
+            alt="People enjoying an event"
+            className="w-full h-full object-cover object-center scale-[1.03] sm:scale-100"
+          />
+
+          {/* Color overlay to match indigo → pink CTA */}
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-700/85 via-indigo-700/80 to-pink-600/85" />
+
+          {/* Subtle vignette */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
+
+          {/* Animated light sweep */}
+          <motion.div
+            initial={{ x: "-120%", opacity: 0 }}
+            animate={{ x: "180%", opacity: 0.6 }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              repeatDelay: 4,
+              ease: "easeInOut",
+            }}
+            className="absolute top-0 h-full w-1/3 bg-gradient-to-r from-white/10 via-white/5 to-transparent blur-2xl"
+          />
+
+          {/* Floating particles */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute w-2 h-2 bg-white/30 rounded-full top-1/4 left-1/3 animate-pulse" />
+            <div className="absolute w-1.5 h-1.5 bg-white/20 rounded-full top-2/3 left-1/2 animate-bounce" />
+            <div className="absolute w-1 h-1 bg-white/20 rounded-full top-1/2 left-2/3 animate-ping" />
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+          <motion.h2
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45 }}
+            className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-xl"
+          >
             Ready to build your next experience?
-          </h2>
-          <p className="text-lg text-indigo-50">
-            Browse curated events or start hosting. Secure payments, fast
-            onboarding, and trusted reviews built in.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.08 }}
+            className="text-lg md:text-xl text-indigo-50 max-w-2xl mx-auto"
+          >
+            Browse curated events or start hosting. Secure payments, fast onboarding,
+            and trusted reviews built in.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.12 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
+            {/* Primary CTA – matches your simple CTA styles */}
             <Link
               href="/events"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-lg font-semibold text-indigo-600 shadow-lg hover:-translate-y-1 transition"
+              className="relative inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-lg font-semibold text-indigo-600 shadow-lg hover:-translate-y-1 transition"
             >
               Explore events <ArrowRight size={18} />
+              {/* Button glow */}
+              <span className="pointer-events-none absolute inset-0 rounded-full bg-white/40 blur-xl opacity-20" />
             </Link>
+
+            {/* Secondary CTA – same as earlier section */}
             <Link
               href={user ? '/events/create' : '/register?role=HOST'}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-white/40 px-6 py-3 text-lg font-semibold text-white hover:bg-white/10 transition"
             >
               Launch an event <CalendarDays size={18} />
             </Link>
-          </div>
+          </motion.div>
         </div>
       </section>
+
 
       <Footer />
     </div>

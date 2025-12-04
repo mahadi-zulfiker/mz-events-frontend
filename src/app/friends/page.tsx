@@ -96,15 +96,17 @@ export default function FriendsPage() {
           </div>
         ) : suggestions.length === 0 ? (
           <p className="text-slate-300 text-sm">No suggestions right now.</p>
-        ) : (
-          <div className="space-y-3">
-            {suggestions.map((u) => (
-              <div key={u.id} className="flex items-center gap-3 rounded-xl bg-white/5 p-3 border border-white/10">
-                <Avatar src={u.profileImage} fallback={u.fullName} />
-                <div className="flex-1">
-                  <p className="font-semibold text-white">{u.fullName}</p>
-                  <p className="text-xs text-slate-300">{u.location || 'Anywhere'}</p>
-                </div>
+          ) : (
+            <div className="space-y-3">
+              {suggestions.map((u) => (
+                <div key={u.id} className="flex items-center gap-3 rounded-xl bg-white/5 p-3 border border-white/10">
+                <Link href={`/profile/${u.id}`} className="flex items-center gap-3 flex-1">
+                  <Avatar src={u.profileImage} fallback={u.fullName} />
+                  <div className="flex-1">
+                    <p className="font-semibold text-white">{u.fullName}</p>
+                    <p className="text-xs text-slate-300">{u.location || 'Anywhere'}</p>
+                  </div>
+                </Link>
                 <Button className="px-3 py-1 text-sm" onClick={() => follow(u.id)}>Follow</Button>
               </div>
             ))}
@@ -168,11 +170,13 @@ const FriendList = ({
       <div className="space-y-2">
         {users.map((u) => (
           <div key={u.id} className="flex items-center gap-3 rounded-xl bg-white/5 p-3 border border-white/10">
-            <Avatar src={u.profileImage} fallback={u.fullName} />
-            <div className="flex-1">
-              <p className="font-semibold text-white">{u.fullName}</p>
-              <p className="text-xs text-slate-300">{u.location || 'Anywhere'}</p>
-            </div>
+            <Link href={`/profile/${u.id}`} className="flex items-center gap-3 flex-1">
+              <Avatar src={u.profileImage} fallback={u.fullName} />
+              <div className="flex-1">
+                <p className="font-semibold text-white">{u.fullName}</p>
+                <p className="text-xs text-slate-300">{u.location || 'Anywhere'}</p>
+              </div>
+            </Link>
             <Button className="px-3 py-1 text-sm" variant="outline" onClick={() => onAction(u.id)}>
               {actionLabel}
             </Button>
