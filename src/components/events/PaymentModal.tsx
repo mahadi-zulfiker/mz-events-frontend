@@ -11,7 +11,7 @@ import axios from '@/lib/axios';
 interface InnerProps {
   eventId: string;
   amount: number;
-  onSuccess: (paymentId: string) => Promise<void>;
+  onSuccess: () => Promise<void>;
   onClose: () => void;
 }
 
@@ -38,9 +38,19 @@ const CardPaymentForm = ({ eventId, amount, onSuccess, onClose }: InnerProps) =>
       }
 
       if (result.paymentIntent?.status === 'succeeded') {
-        await onSuccess(result.paymentIntent.id);
+        try {
+          await axios.post('/payments/confirm', {
+            paymentIntentId: result.paymentIntent.id,
+            eventId,
+          });
+        } catch (err) {
+          // Even if confirm fails, proceed to refresh UI
+        }
+        await onSuccess();
         toast.success('Payment successful');
         onClose();
+      } else {
+        toast.error('Payment did not complete');
       }
     } catch (error: any) {
       toast.error(error.message || 'Payment failed');
@@ -86,7 +96,7 @@ export const PaymentModal = ({
   onClose: () => void;
   amount: number;
   eventId: string;
-  onPaymentSuccess: (paymentId: string) => Promise<void>;
+  onPaymentSuccess: () => Promise<void>;
 }) => {
   const [stripePromise, setStripePromise] = useState<any>(null);
 

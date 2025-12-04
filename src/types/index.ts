@@ -33,6 +33,8 @@ export interface Event {
   time: string;
   location: string;
   address: string;
+  latitude?: number | null;
+  longitude?: number | null;
   minParticipants: number;
   maxParticipants: number;
   joiningFee: number;
@@ -68,6 +70,7 @@ export interface Review {
   createdAt: string;
   user: ApiUser;
   event?: { id: string; title: string };
+  verified?: boolean;
 }
 
 export interface Faq {
@@ -77,4 +80,30 @@ export interface Faq {
   category?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Payment {
+  id: string;
+  userId: string;
+  hostId: string;
+  eventId: string;
+  amount: number;
+  currency: string;
+  status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
+  paymentIntentId?: string | null;
+  receiptUrl?: string | null;
+  description?: string | null;
+  createdAt: string;
+  event: Pick<Event, 'id' | 'title' | 'date' | 'time' | 'location'>;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  body: string;
+  type: 'EVENT_UPDATE' | 'PAYMENT' | 'FRIEND_ACTIVITY' | 'GENERAL';
+  data?: any;
+  read: boolean;
+  createdAt: string;
 }

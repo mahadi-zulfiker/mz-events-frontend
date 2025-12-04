@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import axios from '@/lib/axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,7 +10,7 @@ import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 
-export default function AdminUsersPage() {
+function AdminUsersPageInner() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -142,5 +142,13 @@ export default function AdminUsersPage() {
         </Button>
       </div>
     </DashboardShell>
+  );
+}
+
+export default function AdminUsersPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-slate-200">Loading...</div>}>
+      <AdminUsersPageInner />
+    </Suspense>
   );
 }

@@ -274,6 +274,11 @@ export default function EventDetailsPage() {
                                 <FiStar className="fill-current" />
                                 <span className="ml-1">{r.rating}/5</span>
                               </div>
+                              {r.verified && (
+                                <span className="inline-flex items-center text-[11px] text-emerald-300 gap-1">
+                                  <FiShield /> Verified attendee
+                                </span>
+                              )}
                             </div>
                             <span className="ml-auto text-xs text-slate-400">
                               {format(new Date(r.createdAt), 'PP')}
@@ -380,8 +385,8 @@ export default function EventDetailsPage() {
         onClose={() => setShowPaymentModal(false)}
         amount={Math.round(Number(event.joiningFee || 0) * 100)}
         eventId={event.id}
-        onPaymentSuccess={async (paymentId) => {
-          await joinFreeEvent(paymentId);
+        onPaymentSuccess={async () => {
+          await fetchEvent();
         }}
       />
 

@@ -54,6 +54,8 @@ export const EventForm = ({
       time: initialData?.time || '',
       location: initialData?.location || '',
       address: initialData?.address || '',
+      latitude: initialData?.latitude ?? undefined,
+      longitude: initialData?.longitude ?? undefined,
       minParticipants: initialData?.minParticipants || 1,
       maxParticipants: initialData?.maxParticipants || 10,
       joiningFee: initialData?.joiningFee ? Number(initialData.joiningFee) : 0,
@@ -130,6 +132,28 @@ export const EventForm = ({
           {errors.address && (
             <p className="text-sm text-red-600">{errors.address.message}</p>
           )}
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-200">Latitude</label>
+          <Input
+            type="number"
+            step="any"
+            placeholder="Optional"
+            {...register('latitude', { valueAsNumber: true })}
+            className={fieldStyles}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-200">Longitude</label>
+          <Input
+            type="number"
+            step="any"
+            placeholder="Optional"
+            {...register('longitude', { valueAsNumber: true })}
+            className={fieldStyles}
+          />
         </div>
 
         <div className="space-y-2">

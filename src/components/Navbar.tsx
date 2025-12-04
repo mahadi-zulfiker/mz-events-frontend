@@ -11,6 +11,9 @@ import {
   FiLogOut,
   FiChevronDown,
   FiX,
+  FiMapPin,
+  FiBell,
+  FiUsers,
 } from 'react-icons/fi';
 import { HiSparkles } from 'react-icons/hi';
 
@@ -24,6 +27,7 @@ export default function Navbar() {
   const navLinks = useMemo(() => {
     const publicLinks = [
       { href: '/events', label: 'Explore Events', icon: FiCalendar },
+      { href: '/map', label: 'Map View', icon: FiMapPin },
       { href: '/register?role=HOST', label: 'Become a Host', icon: HiSparkles },
     ];
 
@@ -35,7 +39,13 @@ export default function Navbar() {
       icon: FiGrid,
     };
 
-    return [...publicLinks, dashboardLink];
+    const authenticatedLinks = [
+      { href: '/calendar', label: 'Calendar', icon: FiCalendar },
+      { href: '/friends', label: 'Friends', icon: FiUsers },
+      { href: '/notifications', label: 'Notifications', icon: FiBell },
+    ];
+
+    return [...publicLinks, ...authenticatedLinks, dashboardLink];
   }, [user]);
 
   const isActive = (href: string) => {
