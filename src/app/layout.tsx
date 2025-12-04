@@ -29,9 +29,9 @@ export default function RootLayout({
           <Toaster
             position="top-right"
             toastOptions={{
-              style: { zIndex: 12000, marginTop: '84px' },
+              style: { zIndex: 12000, marginTop: '60px' },
             }}
-            containerStyle={{ zIndex: 12000, marginTop: 84 }}
+            containerStyle={{ zIndex: 12000, marginTop: 60 }}
           />
           {children}
         </AuthProvider>
