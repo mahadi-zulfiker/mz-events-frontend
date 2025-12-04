@@ -70,7 +70,12 @@ export default function EditEventPage() {
     return (
         <DashboardShell title="Edit event" subtitle="Update event information" actions={null}>
             <div className="glass-panel rounded-2xl border border-white/10 p-6">
-                <EventForm initialData={event} onSubmit={handleUpdate} submitLabel="Save changes" />
+                <EventForm
+                    initialData={event}
+                    onSubmit={handleUpdate}
+                    submitLabel="Save changes"
+                    allowStatusChange
+                />
             </div>
         </DashboardShell>
     );

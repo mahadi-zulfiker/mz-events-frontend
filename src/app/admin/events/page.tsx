@@ -10,6 +10,8 @@ import { Event } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { DashboardShell } from '@/components/layout/DashboardShell';
+import { confirmToast } from '@/components/ui/confirm-toast';
+import Link from 'next/link';
 
 export default function AdminEventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -56,6 +58,15 @@ export default function AdminEventsPage() {
     }
   };
 
+  const confirmDeleteEvent = (id: string, title: string) =>
+    confirmToast({
+      title: 'Delete event?',
+      description: `This removes "${title}" and its attendees.`,
+      confirmText: 'Delete',
+      tone: 'danger',
+      onConfirm: () => deleteEvent(id),
+    });
+
   const totalPages = Math.max(1, Math.ceil(meta.total / (meta.limit || 1)));
 
   return (
@@ -91,7 +102,10 @@ export default function AdminEventsPage() {
                   <Badge variant="outline">{e.category}</Badge>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button variant="destructive" onClick={() => deleteEvent(e.id)}>
+                  <Link href={`/events/edit/${e.id}`}>
+                    <Button variant="outline">Edit</Button>
+                  </Link>
+                  <Button variant="destructive" onClick={() => confirmDeleteEvent(e.id, e.title)}>
                     Delete
                   </Button>
                 </div>

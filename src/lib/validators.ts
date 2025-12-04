@@ -24,6 +24,7 @@ export const eventSchema = z
     maxParticipants: z.number().int().positive(),
     joiningFee: z.number().nonnegative(),
     imageUrl: z.string().url().optional(),
+    status: z.enum(['OPEN', 'FULL', 'CANCELLED', 'COMPLETED']).optional(),
   })
   .refine((data) => data.maxParticipants > data.minParticipants, {
     path: ['maxParticipants'],

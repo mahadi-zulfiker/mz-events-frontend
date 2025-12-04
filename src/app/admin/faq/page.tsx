@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Faq } from '@/types';
 import { format } from 'date-fns';
+import { confirmToast } from '@/components/ui/confirm-toast';
 
 const emptyForm = { question: '', answer: '', category: '' };
 
@@ -81,8 +82,6 @@ export default function AdminFaqPage() {
   };
 
   const deleteFaq = async (id: string) => {
-    const confirmed = window.confirm('Delete this FAQ?');
-    if (!confirmed) return;
     try {
       await axios.delete(`/faqs/${id}`);
       toast.success('FAQ deleted');
@@ -91,6 +90,15 @@ export default function AdminFaqPage() {
       toast.error('Failed to delete FAQ');
     }
   };
+
+  const confirmDeleteFaq = (id: string, question: string) =>
+    confirmToast({
+      title: 'Delete this FAQ?',
+      description: question,
+      confirmText: 'Delete',
+      tone: 'danger',
+      onConfirm: () => deleteFaq(id),
+    });
 
   return (
     <DashboardShell
@@ -186,7 +194,10 @@ export default function AdminFaqPage() {
                     <Button variant="outline" onClick={() => startEdit(faq)}>
                       Edit
                     </Button>
-                    <Button variant="destructive" onClick={() => deleteFaq(faq.id)}>
+                    <Button
+                      variant="destructive"
+                      onClick={() => confirmDeleteFaq(faq.id, faq.question)}
+                    >
                       Delete
                     </Button>
                   </div>

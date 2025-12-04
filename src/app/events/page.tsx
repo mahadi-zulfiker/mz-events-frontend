@@ -14,6 +14,12 @@ import { Badge } from '@/components/ui/badge';
 import { Event } from '@/types';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import dynamic from 'next/dynamic';
+
+const MapContainer = dynamic(async () => (await import('react-leaflet')).MapContainer, { ssr: false });
+const TileLayer = dynamic(async () => (await import('react-leaflet')).TileLayer, { ssr: false });
+const Marker = dynamic(async () => (await import('react-leaflet')).Marker, { ssr: false });
+const Popup = dynamic(async () => (await import('react-leaflet')).Popup, { ssr: false });
 
 const statusColor = {
   OPEN: 'bg-emerald-100 text-emerald-800',
@@ -37,6 +43,8 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [meta, setMeta] = useState({ page: 1, limit: 12, total: 0 });
+  const [mapReady, setMapReady] = useState(false);
+  const defaultCenter: [number, number] = [40, -95];
   const [filters, setFilters] = useState({
     search: '',
     location: '',
@@ -54,6 +62,19 @@ export default function EventsPage() {
   useEffect(() => {
     fetchEvents();
   }, [filters, meta.page]);
+
+  useEffect(() => {
+    (async () => {
+      const lf = await import('leaflet');
+      lf.Marker.prototype.options.icon = lf.icon({
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+      });
+      setMapReady(true);
+    })();
+  }, []);
 
   const fetchEvents = async () => {
     try {
@@ -204,104 +225,144 @@ export default function EventsPage() {
           </div>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, idx) => (
-              <div key={idx} className="h-72 glass-panel rounded-2xl animate-pulse bg-white/5" />
-            ))}
-          </div>
-        ) : events.length === 0 ? (
-          <div className="glass-panel rounded-2xl p-10 text-center text-slate-200 border border-dashed border-white/20">
-            <p className="text-2xl font-semibold">No events found</p>
-            <p className="text-sm text-slate-400 mt-2">Adjust your filters or check back later.</p>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map((event) => {
-                const participantCount = event._count?.participants ?? 0;
-                const fee = Number(event.joiningFee || 0);
-                const cover =
-                  event.imageUrl ||
-                  'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1200&q=80';
+        <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+          <div className="space-y-6">
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, idx) => (
+                  <div key={idx} className="h-72 glass-panel rounded-2xl animate-pulse bg-white/5" />
+                ))}
+              </div>
+            ) : events.length === 0 ? (
+              <div className="glass-panel rounded-2xl p-10 text-center text-slate-200 border border-dashed border-white/20">
+                <p className="text-2xl font-semibold">No events found</p>
+                <p className="text-sm text-slate-400 mt-2">Adjust your filters or check back later.</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {events.map((event) => {
+                    const participantCount = event._count?.participants ?? 0;
+                    const fee = Number(event.joiningFee || 0);
+                    const cover =
+                      event.imageUrl ||
+                      'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1200&q=80';
 
-                return (
-                  <Link
-                    key={event.id}
-                    href={`/events/${event.id}`}
-                    className="group overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-xl shadow-indigo-900/40 transition hover:-translate-y-2"
+                    return (
+                      <Link
+                        key={event.id}
+                        href={`/events/${event.id}`}
+                        className="group overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-xl shadow-indigo-900/40 transition hover:-translate-y-2"
+                      >
+                        <div
+                          className="h-40 bg-cover bg-center relative"
+                          style={{ backgroundImage: `url(${cover})` }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                          <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                            <Badge className={cn(statusColor[event.status] || 'bg-gray-100 text-gray-700')}>
+                              {event.status}
+                            </Badge>
+                            <span className="text-xs text-white opacity-80">
+                              {participantCount}/{event.maxParticipants} joined
+                            </span>
+                          </div>
+                        </div>
+                        <div className="p-5 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Badge variant="outline" className="bg-white/10 border-white/10 text-white">
+                              {event.category}
+                            </Badge>
+                            <span className="text-xs text-slate-300">
+                              Host: {event.host.fullName.split(' ')[0]}
+                            </span>
+                          </div>
+                          <h3 className="text-xl font-semibold text-white line-clamp-2">{event.title}</h3>
+                          <p className="text-sm text-slate-200 line-clamp-2">{event.description}</p>
+                          <div className="space-y-2 text-sm text-slate-200">
+                            <div className="flex items-center gap-2">
+                              <FiClock className="text-indigo-300" />
+                              <span>{`${format(new Date(event.date), 'PPP')} at ${event.time}`}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <FiMapPin className="text-indigo-300" />
+                              <span>{event.location}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <FiDollarSign className="text-indigo-300" />
+                              <span>{fee === 0 ? 'Free' : `$${fee}`}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 pt-3 border-t border-white/10">
+                            <div className="w-9 h-9 bg-gradient-to-br from-indigo-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-bold">
+                              {event.host.fullName.charAt(0)}
+                            </div>
+                            <span className="text-sm text-slate-200">Hosted by {event.host.fullName}</span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between mt-6">
+                  <Button
+                    variant="outline"
+                    disabled={meta.page <= 1}
+                    onClick={() => setMeta((p) => ({ ...p, page: Math.max(1, p.page - 1) }))}
                   >
-                    <div
-                      className="h-40 bg-cover bg-center relative"
-                      style={{ backgroundImage: `url(${cover})` }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                      <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                        <Badge className={cn(statusColor[event.status] || 'bg-gray-100 text-gray-700')}>
-                          {event.status}
-                        </Badge>
-                        <span className="text-xs text-white opacity-80">
-                          {participantCount}/{event.maxParticipants} joined
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-5 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="bg-white/10 border-white/10 text-white">
-                          {event.category}
-                        </Badge>
-                        <span className="text-xs text-slate-300">
-                          Host: {event.host.fullName.split(' ')[0]}
-                        </span>
-                      </div>
-                      <h3 className="text-xl font-semibold text-white line-clamp-2">{event.title}</h3>
-                      <p className="text-sm text-slate-200 line-clamp-2">{event.description}</p>
-                      <div className="space-y-2 text-sm text-slate-200">
-                        <div className="flex items-center gap-2">
-                          <FiClock className="text-indigo-300" />
-                          <span>{`${format(new Date(event.date), 'PPP')} at ${event.time}`}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <FiMapPin className="text-indigo-300" />
-                          <span>{event.location}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <FiDollarSign className="text-indigo-300" />
-                          <span>{fee === 0 ? 'Free' : `$${fee}`}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 pt-3 border-t border-white/10">
-                        <div className="w-9 h-9 bg-gradient-to-br from-indigo-400 to-cyan-400 rounded-full flex items-center justify-center text-white font-bold">
-                          {event.host.fullName.charAt(0)}
-                        </div>
-                        <span className="text-sm text-slate-200">Hosted by {event.host.fullName}</span>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
+                    Previous
+                  </Button>
+                  <p className="text-sm text-slate-300">
+                    Page {meta.page} of {totalPages}
+                  </p>
+                  <Button
+                    variant="outline"
+                    disabled={meta.page >= totalPages}
+                    onClick={() => setMeta((p) => ({ ...p, page: Math.min(totalPages, p.page + 1) }))}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="glass-panel rounded-2xl border border-white/10 p-4 h-full space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-white">Live map</p>
+              <Badge variant="outline" className="bg-white/5 border-white/10 text-white">
+                {events.length} events
+              </Badge>
             </div>
-            <div className="flex items-center justify-between mt-6">
-              <Button
-                variant="outline"
-                disabled={meta.page <= 1}
-                onClick={() => setMeta((p) => ({ ...p, page: Math.max(1, p.page - 1) }))}
-              >
-                Previous
-              </Button>
-              <p className="text-sm text-slate-300">
-                Page {meta.page} of {totalPages}
-              </p>
-              <Button
-                variant="outline"
-                disabled={meta.page >= totalPages}
-                onClick={() => setMeta((p) => ({ ...p, page: Math.min(totalPages, p.page + 1) }))}
-              >
-                Next
-              </Button>
+            <div className="rounded-xl overflow-hidden border border-white/10 bg-white/5">
+              {!mapReady ? (
+                <div className="h-72 animate-pulse bg-white/5" />
+              ) : (
+                <div className="h-72">
+                  <MapContainer center={defaultCenter} zoom={3} scrollWheelZoom style={{ height: '100%', width: '100%' }}>
+                    <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    {events
+                      .filter((e) => e.latitude && e.longitude)
+                      .map((e) => (
+                        <Marker key={e.id} position={[Number(e.latitude), Number(e.longitude)] as any}>
+                          <Popup>
+                            <div className="space-y-1">
+                              <p className="font-semibold">{e.title}</p>
+                              <p className="text-xs text-slate-500">{e.location}</p>
+                              <Badge variant="outline">{e.category}</Badge>
+                            </div>
+                          </Popup>
+                        </Marker>
+                      ))}
+                  </MapContainer>
+                </div>
+              )}
             </div>
-          </>
-        )}
+            <p className="text-xs text-slate-300">
+              Quick glance of events with location data. Use the dedicated map page for full-screen filtering.
+            </p>
+          </div>
+        </div>
       </div>
 
       <Footer />

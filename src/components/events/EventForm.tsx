@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { eventSchema } from '@/lib/validators';
@@ -13,6 +13,11 @@ import { Select } from '../ui/select';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { Event } from '@/types';
+import dynamic from 'next/dynamic';
+
+const MapContainer = dynamic(async () => (await import('react-leaflet')).MapContainer, { ssr: false });
+const TileLayer = dynamic(async () => (await import('react-leaflet')).TileLayer, { ssr: false });
+const Marker = dynamic(async () => (await import('react-leaflet')).Marker, { ssr: false });
 
 type EventFormValues = z.infer<typeof eventSchema>;
 
@@ -27,16 +32,26 @@ const categories = [
   { value: 'OTHER', label: 'Other' },
 ];
 
+const statusOptions = [
+  { value: 'OPEN', label: 'Open' },
+  { value: 'FULL', label: 'Full' },
+  { value: 'COMPLETED', label: 'Completed' },
+  { value: 'CANCELLED', label: 'Cancelled' },
+];
+
 export const EventForm = ({
   initialData,
   onSubmit,
   submitLabel = 'Create Event',
+  allowStatusChange = false,
 }: {
   initialData?: Partial<Event>;
   onSubmit: (values: EventFormValues) => Promise<void>;
   submitLabel?: string;
+  allowStatusChange?: boolean;
 }) => {
   const [uploading, setUploading] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
   const fieldStyles = 'bg-white/5 border-white/10 text-white placeholder:text-slate-300';
 
   const {
@@ -44,6 +59,7 @@ export const EventForm = ({
     handleSubmit,
     setValue,
     formState: { errors, isSubmitting },
+    watch,
   } = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
@@ -60,8 +76,24 @@ export const EventForm = ({
       maxParticipants: initialData?.maxParticipants || 10,
       joiningFee: initialData?.joiningFee ? Number(initialData.joiningFee) : 0,
       imageUrl: initialData?.imageUrl || '',
+      status: initialData?.status || 'OPEN',
     },
   });
+  const latitude = watch('latitude');
+  const longitude = watch('longitude');
+
+  useEffect(() => {
+    (async () => {
+      const lf = await import('leaflet');
+      lf.Marker.prototype.options.icon = lf.icon({
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+      });
+      setMapReady(true);
+    })();
+  }, []);
 
   const handleImageUpload = async (file?: File) => {
     if (!file) return;
@@ -76,6 +108,21 @@ export const EventForm = ({
       setUploading(false);
     }
   };
+
+  const handleMapClick = (e: any) => {
+    const { lat, lng } = e.latlng;
+    setValue('latitude', Number(lat.toFixed(6)));
+    setValue('longitude', Number(lng.toFixed(6)));
+    toast.success('Pinned location on map');
+  };
+
+  const markerPosition =
+    typeof latitude === 'number' &&
+    !Number.isNaN(latitude) &&
+    typeof longitude === 'number' &&
+    !Number.isNaN(longitude)
+      ? ([Number(latitude), Number(longitude)] as [number, number])
+      : undefined;
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
@@ -101,6 +148,25 @@ export const EventForm = ({
             <p className="text-sm text-red-600">{errors.category.message}</p>
           )}
         </div>
+
+        {allowStatusChange && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-200">Event Status</label>
+            <Select {...register('status')} className={fieldStyles}>
+              {statusOptions.map((status) => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
+            </Select>
+            <p className="text-xs text-slate-400">
+              Mark as completed once the event is done to unlock attendee reviews.
+            </p>
+            {errors.status && (
+              <p className="text-sm text-red-600">{errors.status.message as string}</p>
+            )}
+          </div>
+        )}
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-200">Date</label>
@@ -154,6 +220,34 @@ export const EventForm = ({
             {...register('longitude', { valueAsNumber: true })}
             className={fieldStyles}
           />
+        </div>
+
+        <div className="md:col-span-2 space-y-2">
+          <label className="text-sm font-medium text-slate-200">Map (click to drop a pin)</label>
+          <div className="rounded-xl border border-white/10 overflow-hidden bg-white/5">
+            {!mapReady ? (
+              <div className="h-64 animate-pulse bg-white/5" />
+            ) : (
+              <div className="h-64">
+                <MapContainer
+                  center={(markerPosition || [40, -95]) as [number, number]}
+                  zoom={markerPosition ? 10 : 3}
+                  scrollWheelZoom
+                  style={{ height: '100%', width: '100%' }}
+                  onClick={handleMapClick as any}
+                >
+                  <TileLayer
+                    attribution="&copy; OpenStreetMap contributors"
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  {markerPosition && <Marker position={markerPosition as any} />}
+                </MapContainer>
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-slate-400">
+            Add coordinates for map and discovery views. Tap anywhere to update latitude/longitude automatically.
+          </p>
         </div>
 
         <div className="space-y-2">

@@ -11,6 +11,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Events & Activities Platform",
   description: "Connect with people for events and activities",
+  icons: {
+    icon: '/logo-eventhub.svg',
+    shortcut: '/logo-eventhub.svg',
+  },
 };
 
 export default function RootLayout({
@@ -22,7 +26,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
         <AuthProvider>
-          <Toaster position="top-right" />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: { zIndex: 12000, marginTop: '84px' },
+            }}
+            containerStyle={{ zIndex: 12000, marginTop: 84 }}
+          />
           {children}
         </AuthProvider>
       </body>

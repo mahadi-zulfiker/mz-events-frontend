@@ -24,6 +24,8 @@ interface ProfileData extends ApiUser {
   hostedEvents?: Event[];
   participants?: any[];
   receivedReviews?: Review[];
+  followersCount?: number;
+  followingCount?: number;
 }
 
 const updateSchema = z.object({
@@ -164,6 +166,14 @@ export default function ProfilePage() {
                   <FiMapPin /> {profile.location}
                 </span>
               )}
+            </div>
+            <div className="flex items-center gap-4 text-sm text-white">
+              <span className="flex items-center gap-1">
+                <strong className="text-lg">{profile.followersCount ?? 0}</strong> Followers
+              </span>
+              <span className="flex items-center gap-1">
+                <strong className="text-lg">{profile.followingCount ?? 0}</strong> Following
+              </span>
             </div>
             {profile.interests && profile.interests.length > 0 && (
               <div className="flex flex-wrap gap-2">

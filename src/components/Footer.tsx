@@ -56,6 +56,8 @@ export default function Footer() {
               { label: 'Home', href: '/' },
               { label: 'Browse Events', href: '/events' },
               { label: 'Dashboard', href: '/dashboard' },
+              { label: 'About', href: '/about' },
+              { label: 'Contact', href: '/contact' },
             ]}
           />
           <FooterColumn

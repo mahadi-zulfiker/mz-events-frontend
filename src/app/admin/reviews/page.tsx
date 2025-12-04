@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { DashboardShell } from '@/components/layout/DashboardShell';
+import { confirmToast } from '@/components/ui/confirm-toast';
 
 export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -56,6 +57,15 @@ export default function AdminReviewsPage() {
     }
   };
 
+  const confirmDeleteReview = (id: string, userName: string) =>
+    confirmToast({
+      title: 'Delete this review?',
+      description: `Remove feedback left by ${userName}?`,
+      confirmText: 'Delete',
+      tone: 'danger',
+      onConfirm: () => deleteReview(id),
+    });
+
   const totalPages = Math.max(1, Math.ceil(meta.total / (meta.limit || 1)));
 
   return (
@@ -89,7 +99,7 @@ export default function AdminReviewsPage() {
                 </div>
                 <div className="text-sm text-amber-300 font-semibold">{r.rating}/5</div>
                 <div className="text-xs text-slate-300">{format(new Date(r.createdAt), 'PP')}</div>
-                <Button variant="destructive" onClick={() => deleteReview(r.id)}>
+                <Button variant="destructive" onClick={() => confirmDeleteReview(r.id, r.user.fullName)}>
                   Delete
                 </Button>
               </div>

@@ -52,7 +52,7 @@ a {
 
 @keyframes slide-right {
   from {
-    transform: translateX(-10px);
+    transform: translateX(-100%);
     opacity: 0;
   }
   to {
@@ -76,4 +76,10 @@ a {
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* Native select dropdown visibility on dark UI */
+.select-theme option {
+  background-color: #0f172a;
+  color: #e2e8f0;
 }

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from '@/lib/axios';
 import { useAuth } from '@/contexts/AuthContext';
-import { Event } from '@/types';
+import { Event, Review } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -19,6 +19,7 @@ export default function DashboardPage() {
 
   const [joined, setJoined] = useState<Event[]>([]);
   const [hosted, setHosted] = useState<Event[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [adminStats, setAdminStats] = useState<any>(null);
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [adminEvents, setAdminEvents] = useState<Event[]>([]);
@@ -46,9 +47,13 @@ export default function DashboardPage() {
         setAdminUsers(usersRes.data.data);
         setAdminEvents(eventsRes.data.data);
       } else {
-        const { data } = await axios.get(`/users/${user?.id}/events`);
-        setHosted(data.data.hosted || []);
-        setJoined(data.data.joined || []);
+        const [eventsRes, reviewsRes] = await Promise.all([
+          axios.get(`/users/${user?.id}/events`),
+          user?.role === 'HOST' ? axios.get(`/users/${user?.id}/reviews`) : Promise.resolve(null),
+        ]);
+        setHosted(eventsRes.data.data.hosted || []);
+        setJoined(eventsRes.data.data.joined || []);
+        if (reviewsRes) setReviews(reviewsRes.data.data || []);
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to load dashboard');
@@ -101,6 +106,7 @@ export default function DashboardPage() {
           hosted={hosted}
           joined={joined}
           revenue={revenue}
+          reviews={reviews}
           onRefresh={loadData}
         />
       )}
@@ -113,12 +119,14 @@ const UserDashboard = ({
   hosted,
   joined,
   revenue,
+  reviews,
   onRefresh,
 }: {
   role: 'USER' | 'HOST';
   hosted: Event[];
   joined: Event[];
   revenue: number;
+  reviews: Review[];
   onRefresh: () => void;
 }) => {
   const upcomingJoined = joined.filter((e) => new Date(e.date) >= new Date());
@@ -150,9 +158,7 @@ const UserDashboard = ({
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
               {hosted.map((e) => (
-                <Link key={e.id} href={`/events/${e.id}#participants`} className="block">
-                  <EventCard event={e} />
-                </Link>
+                <EventCard key={e.id} event={e} manage />
               ))}
             </div>
           )}
@@ -177,6 +183,41 @@ const UserDashboard = ({
           </div>
         )}
       </Section>
+      {role === 'HOST' && (
+        <Section
+          id="reviews"
+          title="Latest reviews"
+          description="Feedback from attendees across your events."
+          emptyText="No reviews yet."
+        >
+          {reviews.length === 0 ? (
+            <EmptyState message="No reviews yet." actionLabel="Refresh" onAction={onRefresh} />
+          ) : (
+            <div className="space-y-3">
+              {reviews.slice(0, 6).map((r) => (
+                <div
+                  key={r.id}
+                  className="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col gap-1"
+                >
+                  <div className="flex items-center justify-between text-sm text-slate-300">
+                    <span className="font-semibold text-white">{r.user.fullName}</span>
+                    <Badge variant="outline" className="bg-white/5 border-white/10 text-white">
+                      {r.rating}/5
+                    </Badge>
+                  </div>
+                  {r.event?.title && (
+                    <p className="text-xs text-slate-400">Event: {r.event.title}</p>
+                  )}
+                  <p className="text-sm text-slate-100">{r.comment || 'No comment left.'}</p>
+                  <p className="text-xs text-slate-500">
+                    {format(new Date(r.createdAt), 'PP')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </Section>
+      )}
       <div className="text-right">
         <Button variant="ghost" onClick={onRefresh}>
           Refresh
@@ -239,8 +280,8 @@ const AdminDashboard = ({
   </div>
 );
 
-const EventCard = ({ event }: { event: Event }) => (
-  <div className="glass-panel rounded-xl border border-white/10 p-4">
+const EventCard = ({ event, manage = false }: { event: Event; manage?: boolean }) => (
+  <div className="glass-panel rounded-xl border border-white/10 p-4 space-y-2">
     <div className="flex items-center justify-between">
       <div>
         <p className="font-semibold text-white">{event.title}</p>
@@ -250,7 +291,19 @@ const EventCard = ({ event }: { event: Event }) => (
       </div>
       <Badge variant="outline">{event.status}</Badge>
     </div>
-    <p className="text-sm text-slate-200 mt-2 line-clamp-2">{event.description}</p>
+    <p className="text-sm text-slate-200 line-clamp-2">{event.description}</p>
+    {manage && (
+      <div className="flex gap-2 pt-2">
+        <Link href={`/events/${event.id}`}>
+          <Button size="sm" variant="outline">
+            View
+          </Button>
+        </Link>
+        <Link href={`/events/edit/${event.id}`}>
+          <Button size="sm">Edit</Button>
+        </Link>
+      </div>
+    )}
   </div>
 );
 

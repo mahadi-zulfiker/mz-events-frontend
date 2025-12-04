@@ -22,9 +22,10 @@ import { Avatar } from '@/components/ui/avatar';
 import { PaymentModal } from '@/components/events/PaymentModal';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Event, Review } from '@/types';
+import { Event, EventStatus, Review } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { confirmToast } from '@/components/ui/confirm-toast';
 
 const statusBadge: Record<string, any> = {
   OPEN: 'success',
@@ -48,6 +49,7 @@ export default function EventDetailsPage() {
 
   const participantCount = event?._count?.participants ?? 0;
   const isHost = event && user?.id === event.hostId;
+  const isAdmin = user?.role === 'ADMIN';
   const isParticipant = useMemo(
     () => event?.participants?.some((p) => p.userId === user?.id) ?? false,
     [event, user?.id]
@@ -114,6 +116,41 @@ export default function EventDetailsPage() {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const updateEventStatus = async (status: EventStatus) => {
+    if (!event) return;
+    try {
+      setActionLoading(true);
+      await axios.patch(`/events/${event.id}`, { status });
+      toast.success(
+        status === 'COMPLETED'
+          ? 'Event marked as completed. Reviews are now open.'
+          : status === 'CANCELLED'
+            ? 'Event cancelled'
+            : 'Event status updated'
+      );
+      await fetchEvent();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update status');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const requestStatusChange = (status: EventStatus) => {
+    const descriptions: Partial<Record<EventStatus, string>> = {
+      COMPLETED: 'Attendees will be able to leave reviews after marking this event completed.',
+      CANCELLED: 'This will stop new joins. You can reopen the event later.',
+      OPEN: 'Reopen registrations and hide the review form.',
+    };
+    confirmToast({
+      title: `Set event to ${status.toLowerCase()}?`,
+      description: descriptions[status],
+      confirmText: status === 'OPEN' ? 'Reopen event' : `Mark ${status.toLowerCase()}`,
+      tone: status === 'CANCELLED' ? 'danger' : 'default',
+      onConfirm: () => updateEventStatus(status),
+    });
   };
 
   const handleReviewSubmit = async () => {
@@ -292,6 +329,12 @@ export default function EventDetailsPage() {
                     <p className="text-slate-300">No reviews yet.</p>
                   )}
 
+                  {event.status !== 'COMPLETED' && isParticipant && !isHost && (
+                    <p className="rounded-lg border border-amber-200/30 bg-amber-500/10 p-3 text-sm text-amber-100">
+                      The host needs to mark this event as completed before you can leave a review.
+                    </p>
+                  )}
+
                   {event.status === 'COMPLETED' && isParticipant && !isHost && (
                     <div className="rounded-lg border border-indigo-200/40 bg-indigo-500/10 p-4 space-y-3">
                       <p className="font-semibold text-white">Leave a review</p>
@@ -322,6 +365,58 @@ export default function EventDetailsPage() {
               </div>
 
               <div className="space-y-4">
+                {(isHost || isAdmin) && (
+                  <div className="glass-panel rounded-2xl border border-white/10 p-6 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Host controls</h3>
+                        <p className="text-sm text-slate-300">
+                          Update the status to unlock reviews or stop new joins.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-white/5 border-white/10 text-white">
+                          {event.status}
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => router.push(`/events/edit/${event.id}`)}
+                        >
+                          Edit event
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        onClick={() => requestStatusChange('COMPLETED')}
+                        disabled={event.status === 'COMPLETED' || actionLoading}
+                      >
+                        Mark completed
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => requestStatusChange('CANCELLED')}
+                        disabled={event.status === 'CANCELLED' || actionLoading}
+                      >
+                        Cancel event
+                      </Button>
+                      {event.status !== 'OPEN' && (
+                        <Button
+                          variant="ghost"
+                          onClick={() => requestStatusChange('OPEN')}
+                          disabled={event.status === 'OPEN' || actionLoading}
+                        >
+                          Reopen event
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      Mark as completed once the experience wraps up so attendees can leave reviews.
+                    </p>
+                  </div>
+                )}
+
                 {!isHost && (
                   <div className="glass-panel rounded-2xl border border-white/10 p-6 space-y-4">
                     <h3 className="text-xl font-semibold text-white">Join this event</h3>

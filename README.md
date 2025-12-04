@@ -1,36 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Events & Activities Platform (Next.js)
 
-## Getting Started
+A polished event discovery and hosting experience with role-aware navigation, tactile UI polish, and mobile-first patterns.
 
-First, run the development server:
+## Navigation Architecture
+- Public navbar: Logo | Home | Events | About | Contact | Auth. Sticky with transparent-to-solid transition on scroll, notification bell for signed-in users, and a left slide-in drawer on mobile with backdrop + outside-to-close.
+- Dashboard sidebar: Role-aware sections for users, hosts, and admins with nested items, active-route highlights, and collapsible state on desktop plus overlay mode on mobile. Breadcrumbs keep deep routes understandable.
+- Pages added: `/about` (mission & design pillars) and `/contact` (support + feedback entry points).
 
+## Running Locally
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000` after the dev server starts.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes
+- Tailwind CSS powers styling; global utilities live in `src/app/globals.css`.
+- Auth context (`src/contexts/AuthContext.tsx`) provides role data for nav rendering.
+- UI building blocks live in `src/components`; dashboard scaffolding is in `src/components/layout/DashboardShell.tsx`.
