@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -10,16 +10,21 @@ import { motion } from "framer-motion";
 import { useAuth } from '@/contexts/AuthContext';
 import { Event } from '@/types';
 import {
+  ArrowLeft,
   ArrowRight,
   BadgeCheck,
   CalendarDays,
   Clock3,
+  Flame,
+  Globe2,
+  HeartHandshake,
   MapPin,
   PartyPopper,
   Search,
   ShieldCheck,
   Sparkles,
   Star,
+  Ticket,
   UserPlus,
   Users,
 } from 'lucide-react';
@@ -82,6 +87,49 @@ const testimonials = [
     role: 'Tech Professional',
     text: 'Met co-founders at a meetup I discovered here.',
   },
+];
+
+const heroSlides = [
+  {
+    tag: 'Nightlife | Rooftops',
+    title: 'Skyline sessions with live DJs',
+    description:
+      'Sip under the stars with curated music lovers and hosts that keep things intimate.',
+    image:
+      'https://images.unsplash.com/photo-1464375117522-1311d6a5b81f?auto=format&fit=crop&w=2000&q=80',
+    meta: 'Tonight | 40 spots',
+    location: 'Barcelona, ES',
+    priceLabel: 'From $22',
+  },
+  {
+    tag: 'Outdoors | Sunrise',
+    title: 'Trail breakfast + new hiking friends',
+    description:
+      'Catch first light with guides who know the routes and fellow early risers.',
+    image:
+      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2000&q=80',
+    meta: 'Saturday | 18 guests',
+    location: 'Denver, US',
+    priceLabel: 'Free to join',
+  },
+  {
+    tag: 'Food | Supper club',
+    title: 'Secret supper clubs across the city',
+    description:
+      'Farm-to-table menus, playlists, and people who love long dinners.',
+    image:
+      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=2000&q=80',
+    meta: 'Weekly drops | Seats go fast',
+    location: 'Global',
+    priceLabel: 'From $18',
+  },
+];
+
+const heroHighlights = [
+  { label: 'Verified hosts', icon: BadgeCheck },
+  { label: 'Protected by Stripe', icon: ShieldCheck },
+  { label: 'Go solo or bring friends', icon: Users },
+  { label: 'Happening worldwide', icon: Globe2 },
 ];
 
 const fallbackEvents: Partial<Event>[] = [
@@ -163,6 +211,10 @@ export default function Home() {
   const { user } = useAuth();
   const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [eventsSliderIndex, setEventsSliderIndex] = useState(0);
+  const [eventsPaused, setEventsPaused] = useState(false);
+  const eventsSliderRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -181,10 +233,68 @@ export default function Home() {
     loadEvents();
   }, []);
 
+  useEffect(() => {
+    const timer = setInterval(
+      () => setActiveSlide((prev) => (prev + 1) % heroSlides.length),
+      6500
+    );
+    return () => clearInterval(timer);
+  }, []);
+
   const displayedEvents = useMemo(
     () => (featuredEvents.length ? featuredEvents : fallbackEvents),
     [featuredEvents]
   );
+  const loopedEvents = useMemo(
+    () =>
+      displayedEvents.length
+        ? [...displayedEvents, ...displayedEvents, ...displayedEvents]
+        : [],
+    [displayedEvents]
+  );
+
+  useEffect(() => {
+    const slider = eventsSliderRef.current;
+    if (!slider || !displayedEvents.length) return;
+    const handleScroll = () => {
+      const slideWidth = getEventSlideWidth();
+      const total = displayedEvents.length;
+      if (!total) return;
+      let rawIndex = Math.round(slider.scrollLeft / slideWidth);
+      if (rawIndex < total) {
+        slider.scrollLeft += slideWidth * total;
+        rawIndex += total;
+      } else if (rawIndex >= total * 2) {
+        slider.scrollLeft -= slideWidth * total;
+        rawIndex -= total;
+      }
+      const baseIndex = rawIndex % total;
+      setEventsSliderIndex(baseIndex);
+    };
+    slider.addEventListener('scroll', handleScroll, { passive: true });
+    return () => slider.removeEventListener('scroll', handleScroll);
+  }, [displayedEvents.length]);
+
+  useEffect(() => {
+    const slider = eventsSliderRef.current;
+    if (!slider || !displayedEvents.length) return;
+    const startPosition = getEventSlideWidth() * displayedEvents.length;
+    slider.scrollLeft = startPosition;
+    setEventsSliderIndex(0);
+  }, [displayedEvents.length]);
+
+  useEffect(() => {
+    if (eventsPaused || loadingEvents || !displayedEvents.length) return;
+    const slider = eventsSliderRef.current;
+    if (!slider) return;
+    const amount = getEventSlideWidth();
+    const id = setInterval(() => {
+      const nextIdx = (eventsSliderIndex + 1) % displayedEvents.length;
+      slider.scrollTo({ left: nextIdx * amount, behavior: 'smooth' });
+      setEventsSliderIndex(nextIdx);
+    }, 4500);
+    return () => clearInterval(id);
+  }, [eventsPaused, eventsSliderIndex, displayedEvents.length, loadingEvents]);
 
   const topHosts = useMemo<TopHost[]>(() => {
     const map = new Map<string, TopHost>();
@@ -208,142 +318,405 @@ export default function Home() {
     return values.slice(0, 3);
   }, [featuredEvents]);
 
+  const handlePrevSlide = () =>
+    setActiveSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+  const handleNextSlide = () =>
+    setActiveSlide((prev) => (prev + 1) % heroSlides.length);
+  const activeHero = heroSlides[activeSlide];
+  const totalEventsSlides = displayedEvents.length;
+
+  const getEventSlideWidth = () => {
+    const slider = eventsSliderRef.current;
+    if (!slider) return 1;
+    return slider.clientWidth * 0.9 || 1;
+  };
+
+  const handleEventSlide = (direction: 'next' | 'prev') => {
+    const slider = eventsSliderRef.current;
+    if (!slider) return;
+    const amount = getEventSlideWidth();
+    const nextLeft =
+      direction === 'next'
+        ? slider.scrollLeft + amount
+        : slider.scrollLeft - amount;
+    slider.scrollTo({ left: nextLeft, behavior: 'smooth' });
+    const approxIdx = Math.round(nextLeft / amount);
+    setEventsSliderIndex(Math.min(Math.max(approxIdx, 0), totalEventsSlides - 1));
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50">
       <Navbar />
 
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(79,70,229,0.25),transparent_40%)]" />
+      <section className="relative overflow-hidden">
+        <motion.div
+          key={activeHero.image}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url(${activeHero.image})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/90 via-slate-950/80 to-slate-900/75" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(99,102,241,0.25),transparent_35%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(236,72,153,0.2),transparent_35%)]" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28 flex flex-col gap-12">
-          <div className="max-w-3xl space-y-6">
-            <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-wide text-slate-200">
-              <Sparkles size={16} /> Events & Activities Platform
-            </p>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight">
-              Connect through{' '}
-              <span className="bg-gradient-to-r from-indigo-400 to-pink-400 bg-clip-text text-transparent">
-                shared passions
-              </span>{' '}
-              and unforgettable experiences.
-            </h1>
-            <p className="text-lg text-slate-200 md:text-xl">
-              Curated events, trusted hosts, and seamless payments. Discover
-              something new every week and meet people who love what you love.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                href="/events"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-500 px-6 py-3 text-lg font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:translate-y-[-2px] hover:bg-indigo-400"
-              >
-                Explore events <ArrowRight size={18} />
-              </Link>
-              <Link
-                href={user ? '/events/create' : '/register?role=HOST'}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-lg font-semibold text-white transition hover:border-white hover:bg-white/10"
-              >
-                Become a host <BadgeCheck size={18} />
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
-              {stats.map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-xl border border-white/10 bg-white/5 p-4 text-center"
-                >
-                  <p className="text-2xl font-bold text-white">{item.value}</p>
-                  <p className="text-xs text-slate-200">{item.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {howSteps.map((step) => (
-              <div
-                key={step.title}
-                className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur transition hover:-translate-y-1 hover:border-indigo-400/50"
-              >
-                <div className="mb-3 inline-flex rounded-full bg-indigo-500/20 p-2 text-indigo-200">
-                  <step.icon size={18} />
-                </div>
-                <h3 className="text-lg font-semibold text-white">
-                  {step.title}
-                </h3>
-                <p className="text-sm text-slate-200">{step.description}</p>
+        <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-indigo-500/15 blur-3xl" />
+        <div className="absolute -right-16 bottom-0 h-80 w-80 rounded-full bg-pink-500/10 blur-3xl" />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12 md:pt-24 md:pb-20">
+          <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-10 items-center">
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 flex-wrap text-indigo-100">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs uppercase tracking-wide">
+                  <Sparkles size={16} /> Curated IRL & online
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs">
+                  <Flame size={14} className="text-amber-300" />
+                  {activeHero.meta}
+                </span>
               </div>
-            ))}
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight">
+                Meet people through{' '}
+                <span className="bg-gradient-to-r from-indigo-300 via-sky-300 to-pink-300 bg-clip-text text-transparent">
+                  unforgettable plans
+                </span>
+                .
+              </h1>
+
+              <p className="text-lg text-slate-200 md:text-xl max-w-2xl">
+                {activeHero.description}{' '}
+                Discover new cities, supper clubs, hikes, and nights out with trusted hosts.
+              </p>
+
+              <div className="flex items-center gap-3 text-sm text-indigo-50">
+                <Ticket size={16} className="text-indigo-200" />
+                <span className="font-semibold">{activeHero.title}</span>
+                <span className="hidden sm:inline-flex items-center gap-2 pl-3 border-l border-white/10">
+                  <MapPin size={14} className="text-indigo-200" />
+                  {activeHero.location}
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  href="/events"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-indigo-500 px-6 py-3 text-lg font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:-translate-y-1 hover:bg-indigo-400"
+                >
+                  Explore events <ArrowRight size={18} />
+                </Link>
+                <Link
+                  href={user ? '/events/create' : '/register?role=HOST'}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-6 py-3 text-lg font-semibold text-white transition hover:border-white hover:bg-white/10"
+                >
+                  Become a host <BadgeCheck size={18} />
+                </Link>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {heroHighlights.map((item) => (
+                  <span
+                    key={item.label}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-indigo-50"
+                  >
+                    <item.icon size={14} className="text-indigo-200" />
+                    {item.label}
+                  </span>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+                {stats.map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center shadow-lg shadow-indigo-900/20"
+                  >
+                    <p className="text-2xl font-bold text-white">{item.value}</p>
+                    <p className="text-xs text-slate-200">{item.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 -translate-x-6 -translate-y-6 rounded-3xl bg-gradient-to-r from-indigo-500/20 via-blue-500/10 to-pink-500/20 blur-3xl" />
+              <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur">
+                <motion.div
+                  key={activeHero.title}
+                  initial={{ opacity: 0.35, scale: 1.02 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6 }}
+                  className="h-[420px] sm:h-[480px] w-full bg-cover bg-center"
+                  style={{ backgroundImage: `url(${activeHero.image})` }}
+                >
+                  <div className="h-full w-full bg-gradient-to-t from-black/65 via-black/35 to-transparent" />
+                </motion.div>
+                <div className="absolute inset-0 flex flex-col justify-between p-6">
+                  <div className="flex items-center justify-between text-xs text-indigo-50">
+                    <span className="rounded-full bg-black/50 px-3 py-1 border border-white/10">
+                      {activeHero.tag}
+                    </span>
+                    <span className="inline-flex items-center gap-1 font-semibold text-white">
+                      <Ticket size={14} /> {activeHero.priceLabel}
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-bold text-white drop-shadow">
+                      {activeHero.title}
+                    </h3>
+                    <p className="text-sm text-indigo-50/90 max-w-xl">
+                      {activeHero.description}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-indigo-50">
+                    <span className="inline-flex items-center gap-2">
+                      <CalendarDays size={16} className="text-indigo-200" />
+                      {activeHero.meta}
+                    </span>
+                    <span className="inline-flex items-center gap-2">
+                      <MapPin size={16} className="text-indigo-200" />
+                      {activeHero.location}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  {heroSlides.map((slide, idx) => (
+                    <button
+                      key={slide.title}
+                      onClick={() => setActiveSlide(idx)}
+                      className={`h-10 w-10 rounded-full border transition focus:outline-none focus:ring-2 focus:ring-indigo-400/80 ${
+                        idx === activeSlide
+                          ? 'border-indigo-300 bg-white/20 ring-2 ring-indigo-400/60'
+                          : 'border-white/10 bg-white/10 hover:border-white/40'
+                      }`}
+                      style={{
+                        backgroundImage: `url(${slide.image})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }}
+                      aria-label={`Show slide ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrevSlide}
+                    className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 p-3 text-white hover:border-white/40 hover:bg-white/20 transition"
+                    aria-label="Previous slide"
+                  >
+                    <ArrowLeft size={18} />
+                  </button>
+                  <button
+                    onClick={handleNextSlide}
+                    className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 p-3 text-white hover:border-white/40 hover:bg-white/20 transition"
+                    aria-label="Next slide"
+                  >
+                    <ArrowRight size={18} />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <section className="relative py-14 bg-slate-950">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(59,130,246,0.15),transparent_35%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_90%_30%,rgba(168,85,247,0.12),transparent_30%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
+            <div className="space-y-2">
               <p className="text-indigo-300 text-sm font-semibold uppercase tracking-wide">
+                How it works
+              </p>
+              <h2 className="text-3xl font-bold text-white">Plan less. Show up more.</h2>
+              <p className="text-slate-300 max-w-2xl">
+                Build your profile, join experiences, and feel confident every step with verified hosts and secure payments.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 flex items-start gap-3 shadow-lg shadow-indigo-900/30 max-w-md">
+              <div className="rounded-full bg-indigo-500/20 p-2 text-indigo-200">
+                <HeartHandshake size={18} />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-indigo-50 font-semibold">Community-first guarantees</p>
+                <p className="text-xs text-slate-200">
+                  Host verification, real reviews, and instant refunds when events are cancelled.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-5">
+            <div className="grid sm:grid-cols-2 gap-4">
+              {howSteps.map((step) => (
+                <div
+                  key={step.title}
+                  className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 p-5 shadow-lg shadow-indigo-900/20 transition hover:-translate-y-1 hover:border-indigo-400/50"
+                >
+                  <div className="mb-3 inline-flex rounded-full bg-indigo-500/20 p-2 text-indigo-200">
+                    <step.icon size={18} />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">
+                    {step.title}
+                  </h3>
+                  <p className="text-sm text-slate-200">{step.description}</p>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 flex flex-col gap-4 shadow-xl shadow-indigo-900/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-indigo-300 text-xs uppercase tracking-wide">Built-in trust</p>
+                  <h3 className="text-xl font-semibold text-white">Every RSVP protected</h3>
+                </div>
+                <ShieldCheck size={24} className="text-indigo-200" />
+              </div>
+              <p className="text-sm text-slate-200">
+                Instant confirmations, clear refunds, and secure payments mean you can focus on showing up, not logistics.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {heroHighlights.map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-xl border border-white/10 bg-slate-900/70 px-3 py-3 text-xs text-indigo-50 flex items-center gap-2"
+                  >
+                    <item.icon size={14} className="text-indigo-200" />
+                    <span>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative py-16 bg-slate-900/60">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_30%,rgba(59,130,246,0.15),transparent_45%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(236,72,153,0.14),transparent_40%)]" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="space-y-2">
+              <p className="inline-flex items-center gap-2 text-indigo-200 text-xs uppercase tracking-[0.2em]">
+                <Flame size={14} className="text-amber-300" />
                 Discover
               </p>
-              <h2 className="text-3xl font-bold text-white">Featured events</h2>
-              <p className="text-slate-300">
-                Pulled live from the API with status OPEN (showing {displayedEvents.length}{' '}
-                events).
+              <div className="flex items-center gap-3">
+                <h2 className="text-3xl font-bold text-white">Featured events</h2>
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-indigo-100">
+                  {displayedEvents.length} live now
+                </span>
+              </div>
+              <p className="text-slate-300 max-w-2xl">
+                Pulled live from the API with status OPEN. Save a spot or browse everything.
               </p>
             </div>
             <Link
               href="/events"
-              className="inline-flex items-center gap-2 text-indigo-300 hover:text-indigo-200 text-sm font-semibold"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-indigo-100 hover:border-white/30 hover:bg-white/10 transition"
             >
               View all events <ArrowRight size={16} />
             </Link>
           </div>
 
-          {loadingEvents ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, idx) => (
+          <div className="relative rounded-3xl border border-white/10 bg-white/5 p-5 lg:p-6 shadow-xl shadow-indigo-900/30 backdrop-blur-sm overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute -right-10 top-6 h-32 w-32 rounded-full bg-indigo-500/15 blur-3xl" />
+              <div className="absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-sky-400/10 blur-3xl" />
+            </div>
+            {loadingEvents ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[...Array(4)].map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="h-64 rounded-2xl bg-slate-800 animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
                 <div
-                  key={idx}
-                  className="h-64 rounded-2xl bg-slate-800 animate-pulse"
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {displayedEvents.map((event) => (
-                <EventCard key={event.id || event.title} event={event} />
-              ))}
-            </div>
-          )}
+                  ref={eventsSliderRef}
+                  className="flex gap-4 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-3"
+                  onMouseEnter={() => setEventsPaused(true)}
+                  onMouseLeave={() => setEventsPaused(false)}
+                  onTouchStart={() => setEventsPaused(true)}
+                  onTouchEnd={() => setEventsPaused(false)}
+                >
+                  {displayedEvents.map((event) => (
+                    <div key={event.id || event.title} className="snap-start event-slide">
+                      <EventCard event={event} />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs text-indigo-100">
+                    <Sparkles size={14} />
+                    <span>
+                      Slide {eventsSliderIndex + 1} / {totalEventsSlides}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleEventSlide('prev')}
+                      className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 p-2.5 text-white hover:border-white/40 hover:bg-white/20 transition"
+                      aria-label="Previous featured event"
+                    >
+                      <ArrowLeft size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleEventSlide('next')}
+                      className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 p-2.5 text-white hover:border-white/40 hover:bg-white/20 transition"
+                      aria-label="Next featured event"
+                    >
+                      <ArrowRight size={18} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
-      <section className="py-16 bg-slate-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <section className="relative py-16 bg-slate-950">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_40%,rgba(94,234,212,0.08),transparent_32%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_88%_30%,rgba(129,140,248,0.12),transparent_30%)]" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div>
+            <div className="space-y-2">
               <p className="text-indigo-300 text-sm font-semibold uppercase tracking-wide">
                 Trusted hosts
               </p>
               <h2 className="text-3xl font-bold text-white">Top-rated organizers</h2>
-              <p className="text-slate-300">
+              <p className="text-slate-300 max-w-2xl">
                 Curated from live events and reviews. Explore their public profiles before you join.
               </p>
             </div>
             <Link
               href="/events"
-              className="inline-flex items-center gap-2 text-indigo-300 hover:text-indigo-200 text-sm font-semibold"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-indigo-100 hover:border-white/30 hover:bg-white/10 transition"
             >
               Browse events <ArrowRight size={16} />
             </Link>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {topHosts.map((host) => (
+            {topHosts.map((host, idx) => (
               <Link
                 key={host.id || host.name}
                 href={host.id ? `/profile/${host.id}` : '/register?role=HOST'}
-                className="group rounded-2xl border border-white/10 bg-white/5 p-5 flex flex-col gap-3 transition hover:-translate-y-1 hover:border-indigo-400/50"
+                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 via-slate-950 to-black/80 p-5 flex flex-col gap-4 shadow-xl shadow-indigo-900/30 transition hover:-translate-y-1 hover:border-indigo-400/50"
               >
-                <div className="flex items-center gap-3">
+                <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-indigo-500/20 via-cyan-500/15 to-pink-500/20 blur-3xl" />
+                <div className="flex items-center gap-3 relative z-10">
                   <div
                     className="h-12 w-12 rounded-full bg-cover bg-center border border-white/20"
                     style={{
@@ -353,12 +726,17 @@ export default function Home() {
                     }}
                   />
                   <div>
-                    <p className="text-lg font-semibold text-white">{host.name}</p>
+                    <p className="text-lg font-semibold text-white flex items-center gap-2">
+                      {host.name}
+                      <BadgeCheck size={16} className="text-indigo-300" />
+                    </p>
                     <p className="text-xs text-slate-300">{host.location || 'Worldwide'}</p>
                   </div>
                 </div>
-                <p className="text-sm text-slate-200">{host.tagline || 'Community-first host'}</p>
-                <div className="flex items-center justify-between text-sm text-indigo-200">
+                <p className="text-sm text-slate-200 relative z-10">
+                  {host.tagline || 'Community-first host'}
+                </p>
+                <div className="flex items-center justify-between text-sm text-indigo-200 relative z-10">
                   <span className="inline-flex items-center gap-1">
                     <Star size={16} className="fill-yellow-400 text-yellow-400" />
                     {host.rating.toFixed(1)}
@@ -367,45 +745,69 @@ export default function Home() {
                     View profile <ArrowRight size={14} />
                   </span>
                 </div>
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-white/5 to-transparent" />
+                  <div className="absolute inset-0 border border-white/5 rounded-2xl" />
+                  <div className={`absolute -right-12 -top-6 h-24 w-24 rounded-full ${idx === 0 ? 'bg-indigo-500/15' : idx === 1 ? 'bg-sky-400/15' : 'bg-pink-500/15'} blur-2xl`} />
+                </div>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-slate-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="flex flex-col gap-2">
-            <p className="text-indigo-300 text-sm font-semibold uppercase tracking-wide">
-              Browse by category
-            </p>
-            <h2 className="text-3xl font-bold text-white">
-              Find your next obsession
-            </h2>
+      <section className="relative py-16 bg-slate-950/80">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(99,102,241,0.14),transparent_40%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(14,165,233,0.12),transparent_40%)]" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="space-y-2">
+              <p className="text-indigo-300 text-sm font-semibold uppercase tracking-wide">
+                Browse by category
+              </p>
+              <h2 className="text-3xl font-bold text-white">
+                Find your next obsession
+              </h2>
+              <p className="text-sm text-slate-300">
+                Tap a tile to filter events instantly. Curated by vibe, pace, and community.
+              </p>
+            </div>
+            <Link
+              href="/events"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-indigo-100 hover:border-white/30 hover:bg-white/10 transition"
+            >
+              View calendar <ArrowRight size={16} />
+            </Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {categories.map((cat) => (
+            {categories.map((cat, idx) => (
               <Link
                 key={cat.value}
                 href={`/events?category=${cat.value}`}
-                className="group rounded-xl border border-white/10 bg-slate-900 p-4 flex items-center gap-3 text-white transition hover:-translate-y-1 hover:border-indigo-400/50 hover:bg-slate-800"
+                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-950 to-black p-4 flex items-center gap-3 text-white transition hover:-translate-y-1 hover:border-indigo-400/50"
               >
-                <div className="rounded-full bg-indigo-500/10 p-2 text-indigo-300 group-hover:bg-indigo-500/20">
+                <div className="absolute inset-0 opacity-70">
+                  <div className={`absolute -right-10 -top-10 h-28 w-28 rounded-full ${idx % 3 === 0 ? 'bg-indigo-500/20' : idx % 3 === 1 ? 'bg-cyan-400/20' : 'bg-pink-500/20'} blur-2xl`} />
+                  <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white/5 to-transparent" />
+                </div>
+                <div className="rounded-full bg-indigo-500/10 p-2 text-indigo-300 group-hover:bg-indigo-500/20 relative z-10">
                   <cat.icon size={18} />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 relative z-10">
                   <p className="font-semibold">{cat.label}</p>
                   <p className="text-xs text-slate-300">Tap to filter</p>
                 </div>
-                <ArrowRight size={14} className="text-indigo-300" />
+                <ArrowRight size={14} className="text-indigo-300 relative z-10" />
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-16 bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      <section className="relative py-16 bg-slate-900">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(37,99,235,0.12),transparent_40%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_20%,rgba(236,72,153,0.12),transparent_35%)]" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           <div className="flex flex-col gap-2 text-center">
             <p className="text-indigo-300 text-sm font-semibold uppercase tracking-wide">
               Loved by members
@@ -413,20 +815,27 @@ export default function Home() {
             <h2 className="text-3xl font-bold text-white">
               Stories from the community
             </h2>
+            <p className="text-slate-300 text-sm max-w-2xl mx-auto">
+              Real notes from people who met their crew through the platform.
+            </p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((t) => (
+            {testimonials.map((t, idx) => (
               <div
                 key={t.name}
-                className="rounded-2xl border border-white/10 bg-slate-950 p-5 shadow-lg shadow-indigo-900/30"
+                className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 via-slate-950 to-black p-5 shadow-lg shadow-indigo-900/30"
               >
-                <div className="flex items-center gap-2 text-yellow-400 mb-3">
-                  {[...Array(5)].map((_, idx) => (
-                    <Star key={idx} size={16} className="fill-yellow-400" />
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className={`absolute -right-12 -top-10 h-24 w-24 rounded-full ${idx % 2 === 0 ? 'bg-indigo-500/20' : 'bg-amber-400/20'} blur-2xl`} />
+                  <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white/5 to-transparent" />
+                </div>
+                <div className="flex items-center gap-2 text-yellow-400 mb-3 relative z-10">
+                  {[...Array(5)].map((_, starIdx) => (
+                    <Star key={starIdx} size={16} className="fill-yellow-400" />
                   ))}
                 </div>
-                <p className="text-slate-200 italic">&ldquo;{t.text}&rdquo;</p>
-                <div className="mt-4">
+                <p className="text-slate-200 italic relative z-10">&ldquo;{t.text}&rdquo;</p>
+                <div className="mt-4 relative z-10">
                   <p className="font-semibold text-white">{t.name}</p>
                   <p className="text-xs text-slate-400">{t.role}</p>
                 </div>
@@ -445,7 +854,7 @@ export default function Home() {
             className="w-full h-full object-cover object-center scale-[1.03] sm:scale-100"
           />
 
-          {/* Color overlay to match indigo → pink CTA */}
+          {/* Color overlay to match indigo + pink CTA */}
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-700/85 via-indigo-700/80 to-pink-600/85" />
 
           {/* Subtle vignette */}
@@ -499,7 +908,7 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.12 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            {/* Primary CTA – matches your simple CTA styles */}
+            {/* Primary CTA - matches your simple CTA styles */}
             <Link
               href="/events"
               className="relative inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-lg font-semibold text-indigo-600 shadow-lg hover:-translate-y-1 transition"
@@ -509,7 +918,7 @@ export default function Home() {
               <span className="pointer-events-none absolute inset-0 rounded-full bg-white/40 blur-xl opacity-20" />
             </Link>
 
-            {/* Secondary CTA – same as earlier section */}
+            {/* Secondary CTA - same as earlier section */}
             <Link
               href={user ? '/events/create' : '/register?role=HOST'}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-white/40 px-6 py-3 text-lg font-semibold text-white hover:bg-white/10 transition"
@@ -540,13 +949,17 @@ const EventCard = ({ event }: { event: Partial<Event> }) => {
   return (
     <Link
       href={event.id ? `/events/${event.id}` : '/events'}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-lg transition hover:-translate-y-1 hover:border-indigo-400/60"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 via-slate-950 to-black shadow-xl shadow-indigo-900/30 transition hover:-translate-y-1 hover:border-indigo-400/60 min-w-[280px] sm:min-w-[320px] lg:min-w-[360px]"
     >
       <div
         className="h-40 bg-cover bg-center"
         style={{ backgroundImage: `url(${image})` }}
       >
-        <div className="h-full w-full bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="h-full w-full bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+        <div className="absolute top-3 left-3 inline-flex items-center gap-2 rounded-full bg-black/60 backdrop-blur px-3 py-1 text-xs text-indigo-100 border border-white/10">
+          <Clock3 size={12} />
+          Live now
+        </div>
       </div>
       <div className="p-5 space-y-3">
         <div className="flex items-center justify-between text-xs text-slate-300">
@@ -581,8 +994,9 @@ const EventCard = ({ event }: { event: Partial<Event> }) => {
           </div>
         </div>
         <div className="flex items-center justify-between pt-2 text-sm text-indigo-300">
-          <span className="inline-flex items-center gap-1">
-            <Clock3 size={14} /> Live now
+          <span className="inline-flex items-center gap-1 text-slate-200">
+            <Sparkles size={14} />
+            Curated pick
           </span>
           <span className="inline-flex items-center gap-1 group-hover:translate-x-1 transition">
             View details <ArrowRight size={14} />
