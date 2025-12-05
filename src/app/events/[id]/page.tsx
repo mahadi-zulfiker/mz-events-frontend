@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import axios from '@/lib/axios';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -275,18 +276,19 @@ export default function EventDetailsPage() {
                   {participantCount === 0 ? (
                     <p className="text-slate-300">No participants yet.</p>
                   ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       {event.participants?.map((p) => (
-                        <div
+                        <Link
                           key={p.id}
-                          className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3"
+                          href={`/profile/${p.user.id}`}
+                          className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-3 hover:bg-white/10 transition-colors"
                         >
                           <Avatar src={p.user.profileImage} fallback={p.user.fullName} />
-                          <div>
-                            <p className="font-semibold text-white">{p.user.fullName}</p>
+                          <div className="overflow-hidden">
+                            <p className="font-semibold text-white truncate">{p.user.fullName}</p>
                             <p className="text-xs text-slate-300">{p.paymentStatus}</p>
                           </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   )}
@@ -387,8 +389,9 @@ export default function EventDetailsPage() {
                         </Button>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button
+                        className="w-full sm:w-auto"
                         onClick={() => requestStatusChange('COMPLETED')}
                         disabled={event.status === 'COMPLETED' || actionLoading}
                       >
@@ -396,6 +399,7 @@ export default function EventDetailsPage() {
                       </Button>
                       <Button
                         variant="outline"
+                        className="w-full sm:w-auto"
                         onClick={() => requestStatusChange('CANCELLED')}
                         disabled={event.status === 'CANCELLED' || actionLoading}
                       >
@@ -404,6 +408,7 @@ export default function EventDetailsPage() {
                       {event.status !== 'OPEN' && (
                         <Button
                           variant="ghost"
+                          className="w-full sm:w-auto"
                           onClick={() => requestStatusChange('OPEN')}
                           disabled={actionLoading}
                         >

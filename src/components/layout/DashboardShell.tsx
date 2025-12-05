@@ -387,7 +387,7 @@ export function DashboardShell({
             </div>
           </div>
 
-          <div className="p-4 sm:p-6 space-y-6">{children}</div>
+          <div className="p-4 sm:p-6 space-y-6 overflow-x-hidden">{children}</div>
         </main>
       </div>
 

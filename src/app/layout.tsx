@@ -11,9 +11,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Events & Activities Platform",
   description: "Connect with people for events and activities",
+  manifest: '/manifest.json',
   icons: {
     icon: '/logo-eventhub.svg',
     shortcut: '/logo-eventhub.svg',
+    apple: '/logo-eventhub.svg',
   },
 };
 

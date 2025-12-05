@@ -102,21 +102,23 @@ function AdminUsersPageInner() {
         ) : (
           <div className="divide-y divide-white/5">
             {users.map((u) => (
-              <div key={u.id} className="p-4 flex flex-col md:flex-row md:items-center gap-4">
-                <div className="flex-1">
-                  <p className="font-semibold text-white">{u.fullName}</p>
-                  <p className="text-xs text-slate-300">{u.email}</p>
+              <div key={u.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-white truncate">{u.fullName}</p>
+                  <p className="text-xs text-slate-300 truncate">{u.email}</p>
                 </div>
-                <Badge variant="outline">{u.role}</Badge>
-                <Select
-                  value={u.role}
-                  onChange={(e) => updateUser(u.id, e.target.value)}
-                  className="w-36 rounded-lg border border-slate-300 bg-white text-slate-900"
-                >
-                  <option value="USER">USER</option>
-                  <option value="HOST">HOST</option>
-                  <option value="ADMIN">ADMIN</option>
-                </Select>
+                <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                  <Badge variant="outline" className="shrink-0">{u.role}</Badge>
+                  <Select
+                    value={u.role}
+                    onChange={(e) => updateUser(u.id, e.target.value)}
+                    className="w-32 sm:w-36 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm"
+                  >
+                    <option value="USER">USER</option>
+                    <option value="HOST">HOST</option>
+                    <option value="ADMIN">ADMIN</option>
+                  </Select>
+                </div>
               </div>
             ))}
           </div>

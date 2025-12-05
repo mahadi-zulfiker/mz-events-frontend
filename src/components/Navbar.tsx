@@ -41,18 +41,19 @@ export default function Navbar() {
     () =>
       user
         ? [
-            { href: '/', label: 'Home' },
-            { href: '/events', label: 'Events' },
-            { href: '/about', label: 'About' },
-            { href: '/contact', label: 'Contact' },
-            { href: dashboardHref, label: 'Dashboard' },
-          ]
+          { href: '/', label: 'Home' },
+          { href: '/events', label: 'Events' },
+          { href: '/about', label: 'About' },
+          { href: '/contact', label: 'Contact' },
+          { href: dashboardHref, label: 'Dashboard' },
+        ]
         : [
-            { href: '/', label: 'Home' },
-            { href: '/events', label: 'Events' },
-            { href: '/about', label: 'About' },
-            { href: '/contact', label: 'Contact' },
-          ],
+          { href: '/', label: 'Home' },
+          { href: '/events', label: 'Events' },
+          { href: '/register?role=host', label: 'Become a Host' },
+          { href: '/about', label: 'About' },
+          { href: '/contact', label: 'Contact' },
+        ],
     [dashboardHref, user]
   );
 
@@ -60,15 +61,15 @@ export default function Navbar() {
     () =>
       user
         ? [
-            { href: '/about', label: 'About' },
-            { href: '/contact', label: 'Contact' },
-            { href: '/faq', label: 'Help Center' },
-          ]
+          { href: '/about', label: 'About' },
+          { href: '/contact', label: 'Contact' },
+          { href: '/faq', label: 'Help Center' },
+        ]
         : [
-            { href: '/about', label: 'About' },
-            { href: '/contact', label: 'Contact' },
-            { href: '/faq', label: 'Help Center' },
-          ],
+          { href: '/about', label: 'About' },
+          { href: '/contact', label: 'Contact' },
+          { href: '/faq', label: 'Help Center' },
+        ],
     [user]
   );
 
@@ -143,12 +144,12 @@ export default function Navbar() {
 
   const NavLogo = () => (
     <Link href="/" className="flex items-center gap-3">
-      <div className="h-10 w-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center shadow-lg shadow-indigo-500/30 overflow-hidden">
+      <div className="relative h-10 w-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center shadow-lg shadow-indigo-500/30 overflow-hidden shrink-0">
         <Image
           src="/logo-eventhub.svg"
           alt="EventHub"
-          width={36}
-          height={36}
+          fill
+          className="object-contain p-1.5"
           priority
         />
       </div>
@@ -239,124 +240,124 @@ export default function Navbar() {
   const MobileMenuPortal =
     isClient && mobileOpen
       ? createPortal(
-          <>
-            <div
-              className="fixed inset-0 z-[99998] bg-black/60 backdrop-blur-sm transition-opacity"
-              onClick={() => setMobileOpen(false)}
-            />
-            <div className="fixed inset-y-0 left-0 z-[99999] w-80 max-w-[88vw] overflow-y-auto border-r border-white/10 bg-slate-950/95 shadow-2xl shadow-black/50 transition-transform duration-300 animate-slide-right will-change-transform">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-                <div className="flex items-center gap-3">
-                  <NavLogo />
-                </div>
-                <button
-                  onClick={() => setMobileOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white hover:border-white/30"
-                  aria-label="Close menu"
-                >
-                  <FiX />
-                </button>
+        <>
+          <div
+            className="fixed inset-0 z-[99998] bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setMobileOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 z-[99999] w-80 max-w-[85vw] overflow-y-auto border-r border-white/10 bg-slate-950/95 shadow-2xl shadow-black/50 transition-transform duration-300 animate-slide-right will-change-transform">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <NavLogo />
               </div>
-
-              <div className="px-5 py-4 space-y-3">
-                {user ? (
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-2">
-                    <div className="flex items-center gap-3">
-                      <Avatar
-                        src={user.profileImage}
-                        fallback={user.fullName || user.email}
-                        className="h-10 w-10 shadow-lg shadow-indigo-500/30 border border-white/10"
-                      />
-                      <div className="leading-tight">
-                        <p className="text-sm font-semibold text-white">
-                          {user.fullName || user.email}
-                        </p>
-                        <p className="text-xs text-slate-300">
-                          {user.role} mode
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 pt-2">
-                      <Link
-                        href={dashboardHref}
-                        onClick={() => setMobileOpen(false)}
-                        className="rounded-xl border border-white/10 px-3 py-2 text-center text-sm font-semibold text-slate-100 hover:bg-white/5"
-                      >
-                        Dashboard
-                      </Link>
-                      <Link
-                        href={profileHref}
-                        onClick={() => setMobileOpen(false)}
-                        className="rounded-xl border border-white/10 px-3 py-2 text-center text-sm font-semibold text-slate-100 hover:bg-white/5"
-                      >
-                        Profile
-                      </Link>
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="space-y-2">
-                  {navLinks.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      className={cn(
-                        'flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition',
-                        isActive(item.href)
-                          ? 'bg-white/10 text-white border border-white/10'
-                          : 'text-slate-200 hover:bg-white/5 hover:text-white'
-                      )}
-                    >
-                      <span>{item.label}</span>
-                    </Link>
-                  ))}
-                </div>
-
-                <div className="space-y-2 pt-2">
-                  {secondaryLinks.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-200 hover:bg-white/5 hover:text-white"
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-white/60" />
-                      <span>{item.label}</span>
-                    </Link>
-                  ))}
-                </div>
-
-                {!user ? (
-                  <div className="grid grid-cols-2 gap-2 pt-3">
-                    <Link
-                      href="/login"
-                      onClick={() => setMobileOpen(false)}
-                      className="text-center rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-100"
-                    >
-                      Login
-                    </Link>
-                    <Link
-                      href="/register"
-                      onClick={() => setMobileOpen(false)}
-                      className="text-center rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-400 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30"
-                    >
-                      Sign up
-                    </Link>
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleLogout}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-red-100 hover:bg-white/5 hover:text-white"
-                  >
-                    <FiLogOut /> Logout
-                  </button>
-                )}
-              </div>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white hover:border-white/30"
+                aria-label="Close menu"
+              >
+                <FiX />
+              </button>
             </div>
-          </>,
-          document.body
-        )
+
+            <div className="px-5 py-4 space-y-3">
+              {user ? (
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-2">
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      src={user.profileImage}
+                      fallback={user.fullName || user.email}
+                      className="h-10 w-10 shadow-lg shadow-indigo-500/30 border border-white/10"
+                    />
+                    <div className="leading-tight">
+                      <p className="text-sm font-semibold text-white">
+                        {user.fullName || user.email}
+                      </p>
+                      <p className="text-xs text-slate-300">
+                        {user.role} mode
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    <Link
+                      href={dashboardHref}
+                      onClick={() => setMobileOpen(false)}
+                      className="rounded-xl border border-white/10 px-3 py-2 text-center text-sm font-semibold text-slate-100 hover:bg-white/5"
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      href={profileHref}
+                      onClick={() => setMobileOpen(false)}
+                      className="rounded-xl border border-white/10 px-3 py-2 text-center text-sm font-semibold text-slate-100 hover:bg-white/5"
+                    >
+                      Profile
+                    </Link>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="space-y-2">
+                {navLinks.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      'flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition',
+                      isActive(item.href)
+                        ? 'bg-white/10 text-white border border-white/10'
+                        : 'text-slate-200 hover:bg-white/5 hover:text-white'
+                    )}
+                  >
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+
+              <div className="space-y-2 pt-2">
+                {secondaryLinks.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-200 hover:bg-white/5 hover:text-white"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/60" />
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+
+              {!user ? (
+                <div className="grid grid-cols-2 gap-2 pt-3">
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="text-center rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-100"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileOpen(false)}
+                    className="text-center rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-400 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30"
+                  >
+                    Sign up
+                  </Link>
+                </div>
+              ) : (
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm font-semibold text-red-100 hover:bg-white/5 hover:text-white"
+                >
+                  <FiLogOut /> Logout
+                </button>
+              )}
+            </div>
+          </div>
+        </>,
+        document.body
+      )
       : null;
 
   return (

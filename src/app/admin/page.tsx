@@ -38,7 +38,7 @@ export default function AdminHomePage() {
       subtitle="High-level health of users, events, and sentiment."
       actions={<span className="text-sm text-slate-300">Role: Admin</span>}
     >
-      <div className="grid md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Total users" value={stats?.totalUsers ?? 0} tone="cyan" />
         <StatCard label="Live events" value={stats?.totalEvents ?? 0} tone="indigo" />
         <StatCard label="Completed payments" value={stats?.completedPayments ?? 0} tone="emerald" />

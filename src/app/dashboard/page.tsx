@@ -140,7 +140,7 @@ const UserDashboard = ({
 
   return (
     <div className="space-y-6">
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         <StatBox label="Upcoming" value={upcomingJoined.length} tone="indigo" />
         <StatBox label="Completed" value={pastJoined.length} tone="emerald" />
         {role === 'HOST' && (
@@ -162,7 +162,7 @@ const UserDashboard = ({
               onAction={onRefresh}
             />
           ) : (
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {hosted.map((e) => (
                 <EventCard key={e.id} event={e} manage />
               ))}
@@ -180,7 +180,7 @@ const UserDashboard = ({
         {joined.length === 0 ? (
           <EmptyState message="Explore events to join." actionLabel="Refresh" onAction={onRefresh} />
         ) : (
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {joined.map((e) => (
               <Link key={e.id} href={`/events/${e.id}`} className="block">
                 <EventCard event={e} />
@@ -243,7 +243,7 @@ const AdminDashboard = ({
   events: Event[];
 }) => (
   <div className="space-y-6">
-    <div className="grid md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
       <StatBox label="Users" value={stats?.totalUsers || 0} tone="cyan" />
       <StatBox label="Events" value={stats?.totalEvents || 0} tone="indigo" />
       <StatBox label="Payments" value={stats?.completedPayments || 0} tone="emerald" />
@@ -256,7 +256,7 @@ const AdminDashboard = ({
       emptyText="No users"
       id="admin-users"
     >
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {users.slice(0, 6).map((u) => (
           <div key={u.id} className="glass-panel rounded-xl p-4 border border-white/10">
             <div className="flex items-center justify-between">
@@ -277,7 +277,7 @@ const AdminDashboard = ({
       emptyText="No events"
       id="admin-events"
     >
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {events.slice(0, 6).map((e) => (
           <EventCard key={e.id} event={e} manage />
         ))}

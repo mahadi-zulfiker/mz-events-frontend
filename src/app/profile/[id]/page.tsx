@@ -45,6 +45,8 @@ export default function ProfilePage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
 
   const {
     register,
@@ -60,8 +62,20 @@ export default function ProfilePage() {
   useEffect(() => {
     if (params.id) {
       loadProfile();
+      if (user && !isOwnProfile) {
+        checkFollowStatus();
+      }
     }
-  }, [params.id]);
+  }, [params.id, user, isOwnProfile]);
+
+  const checkFollowStatus = async () => {
+    try {
+      const res = await axios.get(`/friends/status/${params.id}`);
+      setIsFollowing(res.data.data.isFollowing);
+    } catch (error) {
+      console.error('Failed to check follow status');
+    }
+  };
 
   const loadProfile = async () => {
     try {
@@ -95,9 +109,9 @@ export default function ProfilePage() {
         ...values,
         interests: values.interests
           ? values.interests
-              .split(',')
-              .map((i) => i.trim())
-              .filter(Boolean)
+            .split(',')
+            .map((i) => i.trim())
+            .filter(Boolean)
           : [],
       });
       toast.success('Profile updated');
@@ -116,6 +130,35 @@ export default function ProfilePage() {
       toast.success('Image uploaded');
     } catch (error: any) {
       toast.error(error.message || 'Upload failed');
+    }
+  };
+
+  const handleFollow = async () => {
+    if (!user) {
+      toast.error('Please login to follow');
+      return;
+    }
+    try {
+      setFollowLoading(true);
+      if (isFollowing) {
+        await axios.delete(`/friends/unfollow/${params.id}`);
+        setIsFollowing(false);
+        setProfile((prev) =>
+          prev ? { ...prev, followersCount: (prev.followersCount || 1) - 1 } : null
+        );
+        toast.success('Unfollowed user');
+      } else {
+        await axios.post(`/friends/follow/${params.id}`);
+        setIsFollowing(true);
+        setProfile((prev) =>
+          prev ? { ...prev, followersCount: (prev.followersCount || 0) + 1 } : null
+        );
+        toast.success('Followed user');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Action failed');
+    } finally {
+      setFollowLoading(false);
     }
   };
 
@@ -185,9 +228,18 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-          {isOwnProfile && (
+          {isOwnProfile ? (
             <Button variant="outline" onClick={() => setEditing((p) => !p)} className="flex items-center gap-2">
               <FiEdit2 /> {editing ? 'Cancel' : 'Edit Profile'}
+            </Button>
+          ) : (
+            <Button
+              onClick={handleFollow}
+              disabled={followLoading}
+              variant={isFollowing ? 'outline' : 'default'}
+              className={isFollowing ? 'border-white/20 text-slate-200 hover:bg-white/5' : ''}
+            >
+              {isFollowing ? 'Unfollow' : 'Follow'}
             </Button>
           )}
         </div>
