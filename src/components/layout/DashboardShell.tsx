@@ -336,8 +336,8 @@ export function DashboardShell({
 
         <main className="flex-1">
           <div className="sticky top-0 z-20 border-b border-white/10 bg-slate-900/70 backdrop-blur-md">
-            <div className="flex items-center justify-between px-4 sm:px-6 py-4">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-start justify-between gap-3 px-4 sm:px-6 py-4">
+              <div className="flex items-center gap-3 flex-1 min-w-[240px]">
                 <button
                   className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 text-white"
                   onClick={() => setSidebarOpen(true)}
@@ -363,26 +363,28 @@ export function DashboardShell({
                   {subtitle && <p className="text-sm text-slate-300">{subtitle}</p>}
                 </div>
               </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="relative hidden md:block">
+              <div className="flex flex-1 min-w-[240px] flex-wrap items-center gap-2 sm:gap-3 justify-end">
+                <div className="relative hidden md:block w-full sm:w-auto">
                   <input
                     placeholder="Quick search"
-                    className="w-52 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:border-white/40 focus:outline-none"
+                    className="w-full md:w-52 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:border-white/40 focus:outline-none"
                   />
                 </div>
                 <Link
                   href="/notifications"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-white/10"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-white/10 whitespace-nowrap"
                 >
                   <FiBell /> Alerts
                 </Link>
                 <Link
                   href="/"
-                  className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-white/10"
+                  className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm font-semibold text-slate-100 hover:bg-white/10 whitespace-nowrap"
                 >
                   <FiHome /> Home
                 </Link>
-                {actions}
+                {actions && (
+                  <div className="flex flex-wrap gap-2 justify-end w-full sm:w-auto">{actions}</div>
+                )}
               </div>
             </div>
           </div>
@@ -393,11 +395,11 @@ export function DashboardShell({
 
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         >
           <div
-            className="absolute left-0 top-0 h-full w-80 max-w-[90vw] bg-slate-950/95 border-r border-white/10 p-5 space-y-6 animate-slide-right z-[95] shadow-2xl shadow-black/50"
+            className="absolute left-0 top-0 h-full w-80 max-w-[90vw] bg-slate-950/95 border-r border-white/10 p-5 space-y-6 animate-slide-right z-[10000] shadow-2xl shadow-black/50 overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">

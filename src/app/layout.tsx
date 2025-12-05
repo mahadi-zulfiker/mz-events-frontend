@@ -9,13 +9,31 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Events & Activities Platform",
-  description: "Connect with people for events and activities",
+  title: {
+    default: "EventHub - Experiences that stick",
+    template: "%s | EventHub",
+  },
+  description: "Connect with people for events and activities. Join or host events in your area.",
   manifest: '/manifest.json',
   icons: {
-    icon: '/logo-eventhub.svg',
-    shortcut: '/logo-eventhub.svg',
-    apple: '/logo-eventhub.svg',
+    icon: [{ url: '/logo-eventhub.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/logo-eventhub.svg', type: 'image/svg+xml' }],
+    shortcut: [{ url: '/logo-eventhub.svg', type: 'image/svg+xml' }],
+  },
+  openGraph: {
+    title: "EventHub - Experiences that stick",
+    description: "Connect with people for events and activities.",
+    siteName: "EventHub",
+    images: [
+      {
+        url: "/logo-eventhub.svg",
+        width: 800,
+        height: 600,
+        alt: "EventHub Logo",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
   },
 };
 

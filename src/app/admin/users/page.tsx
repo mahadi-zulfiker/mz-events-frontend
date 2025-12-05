@@ -100,24 +100,40 @@ function AdminUsersPageInner() {
             ))}
           </div>
         ) : (
-          <div className="divide-y divide-white/5">
+          <div className="space-y-3 md:space-y-0 md:divide-y md:divide-white/5">
             {users.map((u) => (
-              <div key={u.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-white truncate">{u.fullName}</p>
-                  <p className="text-xs text-slate-300 truncate">{u.email}</p>
+              <div
+                key={u.id}
+                className="p-4 rounded-xl border border-white/10 bg-white/5 shadow-sm md:grid md:grid-cols-[1.6fr_auto] md:items-center md:gap-4 md:rounded-none md:border-none md:bg-transparent md:shadow-none"
+              >
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-white truncate text-base">{u.fullName}</p>
+                      <p className="text-sm text-slate-300 truncate">{u.email}</p>
+                    </div>
+                    <Badge variant="outline" className="md:hidden shrink-0 text-[10px] px-2">
+                      {u.role}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-                  <Badge variant="outline" className="shrink-0">{u.role}</Badge>
-                  <Select
-                    value={u.role}
-                    onChange={(e) => updateUser(u.id, e.target.value)}
-                    className="w-32 sm:w-36 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm"
-                  >
-                    <option value="USER">USER</option>
-                    <option value="HOST">HOST</option>
-                    <option value="ADMIN">ADMIN</option>
-                  </Select>
+
+                <div className="flex flex-wrap items-center justify-between md:justify-end gap-3 w-full md:w-auto mt-2 md:mt-0 pt-3 md:pt-0 border-t border-white/5 md:border-none">
+                  <Badge variant="outline" className="hidden md:inline-flex shrink-0 text-xs px-2.5">
+                    {u.role}
+                  </Badge>
+                  <div className="flex items-center gap-2 w-full md:w-auto">
+                    <span className="md:hidden text-xs text-slate-400">Role:</span>
+                    <Select
+                      value={u.role}
+                      onChange={(e) => updateUser(u.id, e.target.value)}
+                      className="flex-1 sm:flex-none sm:w-48 md:w-40 h-9 md:h-10 rounded-lg border border-slate-300 bg-white text-slate-900 text-sm"
+                    >
+                      <option value="USER">USER</option>
+                      <option value="HOST">HOST</option>
+                      <option value="ADMIN">ADMIN</option>
+                    </Select>
+                  </div>
                 </div>
               </div>
             ))}

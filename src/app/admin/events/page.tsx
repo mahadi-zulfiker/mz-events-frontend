@@ -92,27 +92,51 @@ export default function AdminEventsPage() {
             ))}
           </div>
         ) : (
-          <div className="divide-y divide-white/5">
+          <div className="space-y-3 md:space-y-0 md:divide-y md:divide-white/5">
             {events.map((e) => (
-              <div key={e.id} className="p-4 flex flex-col md:flex-row md:items-center gap-4">
-                <div className="flex-1">
-                  <p className="font-semibold text-white">{e.title}</p>
-                  <p className="text-xs text-slate-300">
-                    {format(new Date(e.date), 'PP')} at {e.time}
+              <div
+                key={e.id}
+                className="p-4 rounded-xl border border-white/10 bg-white/5 shadow-sm md:grid md:grid-cols-[1.4fr_auto] md:items-start md:gap-4 md:rounded-none md:border-none md:bg-transparent md:shadow-none"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-white text-base md:text-sm">{e.title}</p>
+                      <p className="text-sm text-slate-300">
+                        {format(new Date(e.date), 'PP')} at {e.time}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="md:hidden text-[10px]">
+                      {e.status}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-slate-200 mt-1 line-clamp-3 bg-white/5 md:bg-transparent p-2 md:p-0 rounded-lg md:rounded-none">
+                    {e.description}
                   </p>
-                  <p className="text-sm text-slate-200 mt-1 line-clamp-2">{e.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className="hidden md:inline-flex">
+                      {e.status}
+                    </Badge>
+                    <Badge variant="outline">{e.category}</Badge>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">{e.status}</Badge>
-                  <Badge variant="outline">{e.category}</Badge>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Link href={`/events/edit/${e.id}`}>
-                    <Button variant="outline">Edit</Button>
-                  </Link>
-                  <Button variant="destructive" onClick={() => confirmDeleteEvent(e.id, e.title)}>
-                    Delete
-                  </Button>
+
+                <div className="flex flex-wrap items-center justify-between md:justify-end gap-2 mt-3 md:mt-0 pt-3 md:pt-0 border-t border-white/5 md:border-none">
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                    <Link href={`/events/edit/${e.id}`}>
+                      <Button variant="outline" size="sm" className="h-8">
+                        Edit
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="h-8"
+                      onClick={() => confirmDeleteEvent(e.id, e.title)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
