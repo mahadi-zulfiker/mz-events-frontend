@@ -64,8 +64,6 @@ export default function Footer() {
             title="Resources"
             items={[
               { label: 'Help Center', href: '/faq' },
-              { label: 'Privacy', href: '/privacy' },
-              { label: 'Terms', href: '/terms' },
             ]}
           />
           <div className="glass-panel rounded-2xl p-5">
