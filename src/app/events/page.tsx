@@ -5,7 +5,7 @@ import axios from '@/lib/axios';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
-import { FiMapPin, FiClock, FiDollarSign, FiSearch, FiFilter } from 'react-icons/fi';
+import { FiMapPin, FiClock, FiDollarSign, FiSearch, FiFilter, FiAlertCircle } from 'react-icons/fi';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { Select } from '@/components/ui/select';
@@ -16,10 +16,10 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import dynamic from 'next/dynamic';
 
-const MapContainer = dynamic(async () => (await import('react-leaflet')).MapContainer, { ssr: false });
-const TileLayer = dynamic(async () => (await import('react-leaflet')).TileLayer, { ssr: false });
-const Marker = dynamic(async () => (await import('react-leaflet')).Marker, { ssr: false });
-const Popup = dynamic(async () => (await import('react-leaflet')).Popup, { ssr: false });
+const LeafletMap = dynamic(() => import('@/components/ui/LeafletMap'), {
+  ssr: false,
+  loading: () => <div className="h-full w-full bg-white/5 animate-pulse rounded-xl" />,
+});
 
 const statusColor = {
   OPEN: 'bg-emerald-100 text-emerald-800',
@@ -42,6 +42,7 @@ const categoryOptions = [
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [meta, setMeta] = useState({ page: 1, limit: 12, total: 0 });
   const [mapReady, setMapReady] = useState(false);
   const defaultCenter: [number, number] = [40, -95];
@@ -54,6 +55,17 @@ export default function EventsPage() {
     maxFee: '',
     date: '',
   });
+  // Debounce search
+  const [debouncedSearch, setDebouncedSearch] = useState(filters.search);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (debouncedSearch !== filters.search) {
+        setFilters(prev => ({ ...prev, search: debouncedSearch }));
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [debouncedSearch]);
+
   const activeFilters = useMemo(
     () => Object.values(filters).filter(Boolean).length,
     [filters]
@@ -64,21 +76,14 @@ export default function EventsPage() {
   }, [filters, meta.page]);
 
   useEffect(() => {
-    (async () => {
-      const lf = await import('leaflet');
-      lf.Marker.prototype.options.icon = lf.icon({
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-      });
-      setMapReady(true);
-    })();
+    // Map ready state handled by component
+    setMapReady(true);
   }, []);
 
   const fetchEvents = async () => {
     try {
       setLoading(true);
+      setError('');
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
         if (value) params.append(key, value);
@@ -91,7 +96,10 @@ export default function EventsPage() {
         setMeta(response.data.meta);
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to load events');
+      console.error(error);
+      const msg = error.response?.data?.message || 'Failed to load events';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -132,7 +140,7 @@ export default function EventsPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div className="glass-panel rounded-2xl border border-white/10 p-5 shadow-2xl">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
             <div>
@@ -153,8 +161,8 @@ export default function EventsPage() {
               <Input
                 type="text"
                 placeholder="Search events..."
-                value={filters.search}
-                onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value }))}
+                value={debouncedSearch}
+                onChange={(e) => setDebouncedSearch(e.target.value)}
                 className="pl-10 border-white/10 bg-white/5 text-white placeholder:text-slate-400"
               />
             </div>
@@ -233,10 +241,31 @@ export default function EventsPage() {
                   <div key={idx} className="h-72 glass-panel rounded-2xl animate-pulse bg-white/5" />
                 ))}
               </div>
+            ) : error ? (
+              <div className="glass-panel rounded-2xl p-12 text-center text-slate-200 border border-dashed border-red-500/20 flex flex-col items-center justify-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-2">
+                  <FiAlertCircle className="w-8 h-8 text-red-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-white">Something went wrong</h3>
+                <p className="text-slate-400 max-w-sm mx-auto">
+                  {error}
+                </p>
+                <Button variant="outline" onClick={fetchEvents} className="mt-4 border-white/10 text-slate-200 hover:bg-white/5">
+                  Try Again
+                </Button>
+              </div>
             ) : events.length === 0 ? (
-              <div className="glass-panel rounded-2xl p-10 text-center text-slate-200 border border-dashed border-white/20">
-                <p className="text-2xl font-semibold">No events found</p>
-                <p className="text-sm text-slate-400 mt-2">Adjust your filters or check back later.</p>
+              <div className="glass-panel rounded-2xl p-12 text-center text-slate-200 border border-dashed border-white/20 flex flex-col items-center justify-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-2">
+                  <FiSearch className="w-8 h-8 text-slate-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-white">No events found</h3>
+                <p className="text-slate-400 max-w-sm mx-auto">
+                  We couldn't find any events matching your criteria. Try adjusting your filters or search terms.
+                </p>
+                <Button variant="outline" onClick={clearFilters} className="mt-4 border-white/10 text-slate-200 hover:bg-white/5">
+                  Clear all filters
+                </Button>
               </div>
             ) : (
               <>
@@ -334,29 +363,24 @@ export default function EventsPage() {
                 {events.length} events
               </Badge>
             </div>
-            <div className="rounded-xl overflow-hidden border border-white/10 bg-white/5">
-              {!mapReady ? (
-                <div className="h-72 animate-pulse bg-white/5" />
-              ) : (
-                <div className="h-72">
-                  <MapContainer center={defaultCenter} zoom={3} scrollWheelZoom style={{ height: '100%', width: '100%' }}>
-                    <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    {events
-                      .filter((e) => e.latitude && e.longitude)
-                      .map((e) => (
-                        <Marker key={e.id} position={[Number(e.latitude), Number(e.longitude)] as any}>
-                          <Popup>
-                            <div className="space-y-1">
-                              <p className="font-semibold">{e.title}</p>
-                              <p className="text-xs text-slate-500">{e.location}</p>
-                              <Badge variant="outline">{e.category}</Badge>
-                            </div>
-                          </Popup>
-                        </Marker>
-                      ))}
-                  </MapContainer>
-                </div>
-              )}
+            <div className="rounded-xl overflow-hidden border border-white/10 bg-white/5 h-72">
+              <LeafletMap
+                center={defaultCenter}
+                zoom={3}
+                markers={events
+                  .filter((e) => e.latitude && e.longitude)
+                  .map((e) => ({
+                    id: e.id,
+                    position: [Number(e.latitude), Number(e.longitude)],
+                    popup: (
+                      <div className="space-y-1">
+                        <p className="font-semibold">{e.title}</p>
+                        <p className="text-xs text-slate-500">{e.location}</p>
+                        <Badge variant="outline">{e.category}</Badge>
+                      </div>
+                    )
+                  }))}
+              />
             </div>
             <p className="text-xs text-slate-300">
               Quick glance of events with location data. Use the dedicated map page for full-screen filtering.

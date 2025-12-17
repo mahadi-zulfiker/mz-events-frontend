@@ -28,11 +28,19 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { confirmToast } from '@/components/ui/confirm-toast';
 
+import dynamic from 'next/dynamic';
+
+const LeafletMap = dynamic(() => import('@/components/ui/LeafletMap'), {
+  ssr: false,
+  loading: () => <div className="h-full w-full bg-white/5 animate-pulse rounded-xl" />,
+});
+
 const statusBadge: Record<string, any> = {
   OPEN: 'success',
   FULL: 'warning',
   COMPLETED: 'default',
   CANCELLED: 'destructive',
+  CLOSED: 'destructive', // fallback
 };
 
 export default function EventDetailsPage() {
@@ -55,6 +63,8 @@ export default function EventDetailsPage() {
     () => event?.participants?.some((p) => p.userId === user?.id) ?? false,
     [event, user?.id]
   );
+
+
 
   useEffect(() => {
     if (params.id) {
@@ -266,6 +276,25 @@ export default function EventDetailsPage() {
                   <DetailPill title="Fee" value={event.joiningFee > 0 ? `$${event.joiningFee}` : 'Free'} />
                   <DetailPill title="Min participants" value={event.minParticipants} />
                   <DetailPill title="Address" value={event.address} />
+                </div>
+
+                {/* Map Section */}
+                <div className="glass-panel rounded-2xl border border-white/10 p-2 h-64 overflow-hidden relative z-0">
+                  {event.latitude && event.longitude ? (
+                    <LeafletMap
+                      center={[Number(event.latitude), Number(event.longitude)]}
+                      zoom={13}
+                      markers={[{
+                        id: event.id,
+                        position: [Number(event.latitude), Number(event.longitude)],
+                        popup: <p>{event.location}</p>
+                      }]}
+                    />
+                  ) : (
+                    <div className="h-full flex items-center justify-center bg-white/5 text-slate-400">
+                      <p>No map location available</p>
+                    </div>
+                  )}
                 </div>
 
                 <SectionCard
