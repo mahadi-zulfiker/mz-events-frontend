@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useRef } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
-import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
+import Autoplay from 'embla-carousel-autoplay';
 import { Event } from '@/types';
 
 type Props = {
@@ -11,57 +11,34 @@ type Props = {
 };
 
 export default function FeaturedEventsSlider({ events, renderCard }: Props) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    align: 'start',
-    loop: events.length > 4, // loop only when it makes sense
-    skipSnaps: false,
-    dragFree: false,
-  });
+  const autoplay = useRef(
+    Autoplay({
+      delay: 2500,
+      stopOnInteraction: false,
+      stopOnMouseEnter: true,
+    })
+  );
 
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [snapCount, setSnapCount] = useState(0);
-
-  const canScrollPrev = useMemo(() => emblaApi?.canScrollPrev() ?? false, [emblaApi, selectedIndex]);
-  const canScrollNext = useMemo(() => emblaApi?.canScrollNext() ?? false, [emblaApi, selectedIndex]);
-
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return;
-    setSelectedIndex(emblaApi.selectedScrollSnap());
-  }, [emblaApi]);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-
-    setSnapCount(emblaApi.scrollSnapList().length);
-    onSelect();
-
-    emblaApi.on('select', onSelect);
-    emblaApi.on('reInit', () => {
-      setSnapCount(emblaApi.scrollSnapList().length);
-      onSelect();
-    });
-
-    return () => {
-      emblaApi.off('select', onSelect);
-    };
-  }, [emblaApi, onSelect]);
-
-  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
-  const scrollTo = useCallback((i: number) => emblaApi?.scrollTo(i), [emblaApi]);
+  const [emblaRef] = useEmblaCarousel(
+    {
+      align: 'start',
+      loop: true,
+      containScroll: false,
+      skipSnaps: false,
+      dragFree: false,
+    },
+    [autoplay.current]
+  );
 
   return (
-    <div className="space-y-6 py-16">
+    <div className="py-16">
       {/* Viewport */}
-      <div
-        ref={emblaRef}
-        className="overflow-hidden"
-      >
+      <div ref={emblaRef} className="overflow-hidden touch-pan-y">
         {/* Track */}
-        <div className="flex touch-pan-y -ml-4">
-          {events.map((event) => (
+        <div className="flex -ml-4">
+          {events.map((event, index) => (
             <div
-              key={event.id || event.title}
+              key={event.id ?? event.title ?? index}
               className="
                 pl-4
                 flex-[0_0_88%]
