@@ -29,6 +29,8 @@ import {
   Users,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import FeaturedEventsSlider from '@/components/events/FeaturedEventsSlider';
+import Testimonials from '@/components/Testimonials';
 
 const howSteps = [
   {
@@ -69,24 +71,6 @@ const stats = [
   { value: '2K+', label: 'Active members' },
   { value: '50+', label: 'Cities covered' },
   { value: '4.8/5', label: 'Average host rating' },
-];
-
-const testimonials = [
-  {
-    name: 'Sarah Johnson',
-    role: 'Music Enthusiast',
-    text: 'Found my concert crew and never miss a show now.',
-  },
-  {
-    name: 'Mike Chen',
-    role: 'Adventure Seeker',
-    text: 'Weekend hikes and new friends every month. Perfect.',
-  },
-  {
-    name: 'Emma Davis',
-    role: 'Tech Professional',
-    text: 'Met co-founders at a meetup I discovered here.',
-  },
 ];
 
 const heroSlides = [
@@ -491,11 +475,10 @@ export default function Home() {
                     <button
                       key={slide.title}
                       onClick={() => setActiveSlide(idx)}
-                      className={`h-10 w-10 rounded-full border transition focus:outline-none focus:ring-2 focus:ring-indigo-400/80 ${
-                        idx === activeSlide
-                          ? 'border-indigo-300 bg-white/20 ring-2 ring-indigo-400/60'
-                          : 'border-white/10 bg-white/10 hover:border-white/40'
-                      }`}
+                      className={`h-10 w-10 rounded-full border transition focus:outline-none focus:ring-2 focus:ring-indigo-400/80 ${idx === activeSlide
+                        ? 'border-indigo-300 bg-white/20 ring-2 ring-indigo-400/60'
+                        : 'border-white/10 bg-white/10 hover:border-white/40'
+                        }`}
                       style={{
                         backgroundImage: `url(${slide.image})`,
                         backgroundSize: 'cover',
@@ -598,95 +581,12 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="relative py-16 bg-slate-900/60">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_30%,rgba(59,130,246,0.15),transparent_45%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(236,72,153,0.14),transparent_40%)]" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="space-y-2">
-              <p className="inline-flex items-center gap-2 text-indigo-200 text-xs uppercase tracking-[0.2em]">
-                <Flame size={14} className="text-amber-300" />
-                Discover
-              </p>
-              <div className="flex items-center gap-3">
-                <h2 className="text-3xl font-bold text-white">Featured events</h2>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-indigo-100">
-                  {displayedEvents.length} live now
-                </span>
-              </div>
-              <p className="text-slate-300 max-w-2xl">
-                Pulled live from the API with status OPEN. Save a spot or browse everything.
-              </p>
-            </div>
-            <Link
-              href="/events"
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-indigo-100 hover:border-white/30 hover:bg-white/10 transition"
-            >
-              View all events <ArrowRight size={16} />
-            </Link>
-          </div>
+      <FeaturedEventsSlider
+        events={displayedEvents}
+        renderCard={(event) => <EventCard event={event} />}
+      />
 
-          <div className="relative rounded-3xl border border-white/10 bg-white/5 p-5 lg:p-6 shadow-xl shadow-indigo-900/30 backdrop-blur-sm overflow-hidden">
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute -right-10 top-6 h-32 w-32 rounded-full bg-indigo-500/15 blur-3xl" />
-              <div className="absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-sky-400/10 blur-3xl" />
-            </div>
-            {loadingEvents ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[...Array(4)].map((_, idx) => (
-                  <div
-                    key={idx}
-                    className="h-64 rounded-2xl bg-slate-800 animate-pulse"
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div
-                  ref={eventsSliderRef}
-                  className="flex gap-4 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-3"
-                  onMouseEnter={() => setEventsPaused(true)}
-                  onMouseLeave={() => setEventsPaused(false)}
-                  onTouchStart={() => setEventsPaused(true)}
-                  onTouchEnd={() => setEventsPaused(false)}
-                >
-                  {displayedEvents.map((event) => (
-                    <div key={event.id || event.title} className="snap-start event-slide">
-                      <EventCard event={event} />
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs text-indigo-100">
-                    <Sparkles size={14} />
-                    <span>
-                      Slide {eventsSliderIndex + 1} / {totalEventsSlides}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleEventSlide('prev')}
-                      className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 p-2.5 text-white hover:border-white/40 hover:bg-white/20 transition"
-                      aria-label="Previous featured event"
-                    >
-                      <ArrowLeft size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleEventSlide('next')}
-                      className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 p-2.5 text-white hover:border-white/40 hover:bg-white/20 transition"
-                      aria-label="Next featured event"
-                    >
-                      <ArrowRight size={18} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="relative py-16 bg-slate-950">
+      <section className="relative py-20 bg-slate-950">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_40%,rgba(94,234,212,0.08),transparent_32%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_88%_30%,rgba(129,140,248,0.12),transparent_30%)]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -756,7 +656,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="relative py-16 bg-slate-950/80">
+      <section className="relative py-20 bg-slate-950/80">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(99,102,241,0.14),transparent_40%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_20%,rgba(14,165,233,0.12),transparent_40%)]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
@@ -804,48 +704,9 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="relative py-16 bg-slate-900">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(37,99,235,0.12),transparent_40%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_20%,rgba(236,72,153,0.12),transparent_35%)]" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="flex flex-col gap-2 text-center">
-            <p className="text-indigo-300 text-sm font-semibold uppercase tracking-wide">
-              Loved by members
-            </p>
-            <h2 className="text-3xl font-bold text-white">
-              Stories from the community
-            </h2>
-            <p className="text-slate-300 text-sm max-w-2xl mx-auto">
-              Real notes from people who met their crew through the platform.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((t, idx) => (
-              <div
-                key={t.name}
-                className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 via-slate-950 to-black p-5 shadow-lg shadow-indigo-900/30"
-              >
-                <div className="absolute inset-0 pointer-events-none">
-                  <div className={`absolute -right-12 -top-10 h-24 w-24 rounded-full ${idx % 2 === 0 ? 'bg-indigo-500/20' : 'bg-amber-400/20'} blur-2xl`} />
-                  <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white/5 to-transparent" />
-                </div>
-                <div className="flex items-center gap-2 text-yellow-400 mb-3 relative z-10">
-                  {[...Array(5)].map((_, starIdx) => (
-                    <Star key={starIdx} size={16} className="fill-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-slate-200 italic relative z-10">&ldquo;{t.text}&rdquo;</p>
-                <div className="mt-4 relative z-10">
-                  <p className="font-semibold text-white">{t.name}</p>
-                  <p className="text-xs text-slate-400">{t.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <Testimonials />
 
-      <section className="relative py-16 sm:py-20 overflow-hidden">
+      <section className="relative py-20 sm:py-20 overflow-hidden">
         {/* Background Image + Gradient Overlay */}
         <div className="absolute inset-0">
           <img
@@ -949,8 +810,7 @@ const EventCard = ({ event }: { event: Partial<Event> }) => {
   return (
     <Link
       href={event.id ? `/events/${event.id}` : '/events'}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 via-slate-950 to-black shadow-xl shadow-indigo-900/30 transition hover:-translate-y-1 hover:border-indigo-400/60 min-w-[280px] sm:min-w-[320px] lg:min-w-[360px]"
-    >
+      className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 via-slate-950 to-black shadow-xl shadow-indigo-900/30 transition hover:-translate-y-1 hover:border-indigo-400/60">
       <div
         className="h-40 bg-cover bg-center"
         style={{ backgroundImage: `url(${image})` }}
