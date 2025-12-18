@@ -227,14 +227,13 @@ export default function EventDetailsPage() {
             <FiArrowLeft /> Back
           </Button>
           <div className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/50 shadow-2xl shadow-indigo-900/40">
-            <div className="h-80 relative">
+            <div className="h-64 sm:h-80 lg:h-96 relative">
               <img src={cover} alt={event.title} className="absolute inset-0 h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent" />
               <div className="absolute bottom-6 left-6 right-6 flex flex-col gap-3">
                 <Badge variant={statusBadge[event.status] || 'default'}>{event.status}</Badge>
-                <h1 className="text-4xl font-bold text-white drop-shadow">{event.title}</h1>
-                <p className="max-w-3xl text-lg text-slate-100">{event.description}</p>
-                <div className="flex flex-wrap gap-4 text-sm text-indigo-50">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white drop-shadow">{event.title}</h1>
+                <div className="flex flex-wrap gap-4 text-sm text-indigo-50 mt-2">
                   <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1">
                     <FiClock /> {format(new Date(event.date), 'PPPP')} at {event.time}
                   </span>
@@ -250,7 +249,11 @@ export default function EventDetailsPage() {
 
             <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
-                <div className="glass-panel rounded-2xl border border-white/10 p-6 flex items-center gap-4">
+                <div className="glass-panel rounded-2xl border border-white/10 p-6 space-y-3">
+                  <h3 className="text-xl font-semibold text-white">About this event</h3>
+                  <p className="text-slate-200 leading-relaxed whitespace-pre-wrap">{event.description}</p>
+                </div>
+                <div className="glass-panel rounded-2xl border border-white/10 p-6 flex flex-col sm:flex-row sm:items-center gap-4">
                   <Avatar src={event.host.profileImage} fallback={event.host.fullName} className="h-14 w-14" />
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
@@ -267,12 +270,12 @@ export default function EventDetailsPage() {
                       </div>
                     )}
                   </div>
-                  <Button variant="outline" onClick={() => router.push(`/profile/${event.host.id}`)}>
+                  <Button variant="outline" onClick={() => router.push(`/profile/${event.host.id}`)} className="w-full sm:w-auto">
                     View profile
                   </Button>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   <DetailPill title="Fee" value={event.joiningFee > 0 ? `$${event.joiningFee}` : 'Free'} />
                   <DetailPill title="Min participants" value={event.minParticipants} />
                   <DetailPill title="Address" value={event.address} />

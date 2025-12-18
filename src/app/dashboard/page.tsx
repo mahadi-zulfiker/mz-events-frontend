@@ -140,7 +140,7 @@ const UserDashboard = ({
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <StatBox label="Upcoming" value={upcomingJoined.length} tone="indigo" />
         <StatBox label="Completed" value={pastJoined.length} tone="emerald" />
         {role === 'HOST' && (
@@ -243,7 +243,7 @@ const AdminDashboard = ({
   events: Event[];
 }) => (
   <div className="space-y-6">
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <StatBox label="Users" value={stats?.totalUsers || 0} tone="cyan" />
       <StatBox label="Events" value={stats?.totalEvents || 0} tone="indigo" />
       <StatBox label="Payments" value={stats?.completedPayments || 0} tone="emerald" />

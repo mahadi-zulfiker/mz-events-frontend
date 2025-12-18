@@ -294,7 +294,7 @@ export function DashboardShell({
       <div className="flex min-h-screen">
         <aside
           className={cn(
-            'hidden lg:flex flex-col border-r border-white/10 bg-slate-950/85 backdrop-blur-xl transition-all duration-300',
+            'hidden lg:flex flex-col border-r border-white/10 bg-slate-950/85 backdrop-blur-xl transition-all duration-300 z-30',
             sidebarCollapsed ? 'w-20' : 'w-64'
           )}
         >
