@@ -13,8 +13,12 @@ import {
   FiSettings,
   FiUser,
   FiX,
+  FiSearch,
+  FiTrendingUp,
+  FiArrowUpRight,
+  FiMusic,
 } from 'react-icons/fi';
-import { HiSparkles } from 'react-icons/hi';
+import { HiSparkles, HiFire, HiHeart, HiCode, HiGlobe, HiDesktopComputer, HiCamera } from 'react-icons/hi';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { confirmToast } from '@/components/ui/confirm-toast';
@@ -136,28 +140,30 @@ export default function Navbar() {
   };
 
   const navStyles = cn(
-    'sticky top-0 z-[9999] transition-all duration-300',
+    'sticky top-0 z-[9999] transition-all duration-500 will-change-transform',
     scrolled || pathname !== '/'
-      ? 'backdrop-blur-xl bg-slate-950/90 border-b border-white/10 shadow-lg shadow-black/30'
-      : 'backdrop-blur-0 bg-transparent'
+      ? 'backdrop-blur-2xl bg-slate-950/80 border-b border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)] py-3'
+      : 'backdrop-blur-0 bg-transparent py-5'
   );
 
   const NavLogo = () => (
-    <Link href="/" className="flex items-center gap-3">
-      <div className="relative h-10 w-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center shadow-lg shadow-indigo-500/30 overflow-hidden shrink-0">
-        <Image
-          src="/logo-eventhub.svg"
-          alt="EventHub"
-          fill
-          className="object-contain p-1.5"
-          priority
-        />
+    <Link href="/" className="flex items-center gap-3 active:scale-95 transition-transform">
+      <div className="relative h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-pink-500 p-[1px] shadow-2xl shadow-indigo-500/20">
+        <div className="h-full w-full rounded-[inherit] bg-slate-950 flex items-center justify-center overflow-hidden">
+          <Image
+            src="/logo-eventhub.svg"
+            alt="EventHub"
+            fill
+            className="object-contain p-2"
+            priority
+          />
+        </div>
       </div>
       <div className="leading-tight hidden sm:block">
-        <span className="text-lg font-extrabold text-white tracking-tight">
+        <span className="text-xl font-black text-white tracking-tighter">
           EventHub
         </span>
-        <p className="text-xs text-slate-300">Experiences that stick</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Pure Experiences</p>
       </div>
     </Link>
   );
@@ -360,6 +366,17 @@ export default function Navbar() {
       )
       : null;
 
+  const categories = [
+    { label: 'Concerts', href: '/events?category=CONCERT', icon: FiMusic, color: 'text-pink-400', desc: 'Live music & festivals' },
+    { label: 'Sports', href: '/events?category=SPORTS', icon: HiFire, color: 'text-orange-400', desc: 'Matches & tournaments' },
+    { label: 'Gaming', href: '/events?category=GAMING', icon: HiDesktopComputer, color: 'text-cyan-400', desc: 'eSports & meetups' },
+    { label: 'Food', href: '/events?category=FOOD', icon: HiHeart, color: 'text-red-400', desc: 'Dining & street food' },
+    { label: 'Tech', href: '/events?category=TECH', icon: HiCode, color: 'text-indigo-400', desc: 'Workshops & talks' },
+    { label: 'Art', href: '/events?category=ART', icon: HiCamera, color: 'text-emerald-400', desc: 'Galleries & workshops' },
+    { label: 'Travel', href: '/events?category=TRAVEL', icon: HiGlobe, color: 'text-sky-400', desc: 'Tours & adventures' },
+    { label: 'Trending', href: '/events?sort=trending', icon: FiTrendingUp, color: 'text-amber-400', desc: 'Hottest picks now' },
+  ];
+
   return (
     <>
       <nav className={navStyles}>
@@ -368,39 +385,71 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center gap-2 lg:gap-3 whitespace-nowrap py-1 no-scrollbar overflow-visible">
             {navLinks.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition',
-                  isActive(item.href)
-                    ? 'bg-white/10 text-white shadow-lg shadow-indigo-500/20'
-                    : 'text-slate-200 hover:text-white hover:bg-white/5'
+              <div key={item.href} className="relative group/nav">
+                <Link
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all duration-300',
+                    isActive(item.href)
+                      ? 'bg-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.4)]'
+                      : 'text-slate-200 hover:text-white hover:bg-white/5'
+                  )}
+                >
+                  <span>{item.label}</span>
+                  {item.label === 'Events' && <FiChevronDown className="group-hover/nav:rotate-180 transition-transform duration-300" />}
+                </Link>
+
+                {item.label === 'Events' && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-300 transform group-hover/nav:translate-y-0 translate-y-2 z-[9999]">
+                    <div className="w-[600px] grid grid-cols-2 gap-4 p-6 rounded-[2rem] border border-white/5 bg-slate-950/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                      <div className="col-span-2 mb-2">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Explore by Interest</p>
+                      </div>
+                      {categories.map((cat) => (
+                        <Link
+                          key={cat.label}
+                          href={cat.href}
+                          className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white/5 transition-all group/cat"
+                        >
+                          <div className={cn("w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center transition-all group-hover/cat:scale-110", cat.color)}>
+                            <cat.icon size={24} />
+                          </div>
+                          <div className="leading-tight">
+                            <p className="text-sm font-black text-white">{cat.label}</p>
+                            <p className="text-[10px] text-slate-400 font-medium">{cat.desc}</p>
+                          </div>
+                        </Link>
+                      ))}
+                      <div className="col-span-2 mt-4 pt-4 border-t border-white/5">
+                        <Link href="/events" className="flex items-center justify-center gap-2 text-xs font-black text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-widest">
+                          View All Experiences <FiArrowUpRight />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
                 )}
-              >
-                <span>{item.label}</span>
-              </Link>
+              </div>
             ))}
             {!user ? (
-              <>
+              <div className="flex items-center gap-3 ml-4">
                 <Link
                   href="/login"
-                  className="text-slate-200 hover:text-white text-sm font-semibold px-3 py-2"
+                  className="text-slate-200 hover:text-white text-sm font-bold px-4 py-2 transition-colors"
                 >
                   Login
                 </Link>
                 <Link
                   href="/register"
-                  className="inline-flex items-center rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:translate-y-[-1px]"
+                  className="inline-flex items-center rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 px-6 py-2.5 text-sm font-black text-white shadow-[0_10px_20px_rgba(99,102,241,0.3)] transition-all hover:scale-105 active:scale-95"
                 >
-                  Sign up
+                  Join Us
                 </Link>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="flex items-center gap-4 ml-4">
                 <NotificationBell />
                 <UserMenu />
-              </>
+              </div>
             )}
           </div>
 
@@ -408,16 +457,16 @@ export default function Navbar() {
             {user && <NotificationBell />}
             <button
               className={cn(
-                'inline-flex h-10 w-10 items-center justify-center rounded-lg border text-white transition',
+                'inline-flex h-12 w-12 items-center justify-center rounded-2xl border text-white transition-all',
                 mobileOpen
-                  ? 'border-white/30 bg-white/10'
+                  ? 'border-indigo-500/50 bg-indigo-500/10'
                   : 'border-white/10 bg-white/5'
               )}
               onClick={() => setMobileOpen((p) => !p)}
               aria-label="Toggle menu"
               aria-expanded={mobileOpen}
             >
-              {mobileOpen ? <FiX /> : <FiMenu />}
+              {mobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
             </button>
           </div>
         </div>
